@@ -1,10 +1,10 @@
-import { useStore } from '@nanostores/react';
 import { useEffect, useRef, useState } from 'react';
-import { Form } from '@remix-run/react';
-import { authUserStore } from '~/lib/stores/auth';
+import { useRouteLoaderData } from '@remix-run/react';
+import type { loader as rootLoader } from '~/root';
 
 export function UserBadge() {
-  const user = useStore(authUserStore);
+  const rootData = useRouteLoaderData<typeof rootLoader>('root');
+  const user = rootData?.user ?? null;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -57,15 +57,13 @@ export function UserBadge() {
             <p className="text-sm font-medium text-bolt-elements-textPrimary truncate">{user.display_name}</p>
             <p className="text-xs text-bolt-elements-textSecondary truncate">{user.email}</p>
           </div>
-          <Form action="/auth/logout" method="post">
-            <button
-              type="submit"
-              className="w-full text-left px-3 py-2 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 flex items-center gap-2 transition-colors"
-            >
-              <div className="i-ph:sign-out text-bolt-elements-textSecondary" />
-              Sign out
-            </button>
-          </Form>
+          <a
+            href="/auth/logout"
+            className="w-full text-left px-3 py-2 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 flex items-center gap-2 transition-colors"
+          >
+            <div className="i-ph:sign-out text-bolt-elements-textSecondary" />
+            Sign out
+          </a>
         </div>
       )}
     </div>

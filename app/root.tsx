@@ -121,8 +121,10 @@ import { getUserById } from './lib/.server/auth/user.server';
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
     const userId = await getUserId(request);
+
     if (userId) {
       const user = await getUserById(userId);
+
       if (user) {
         return json({
           user: {

@@ -25,6 +25,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const chats = await listChatsByProject(projectId, userId);
+
   return json({ chats });
 }
 
@@ -57,7 +58,9 @@ export async function action({ request }: ActionFunctionArgs) {
       description: body.description,
       latestMessageAt: body.latestMessageAt,
     });
+
     const chat = await getChatById(body.id, userId);
+
     return json({ chat });
   }
 

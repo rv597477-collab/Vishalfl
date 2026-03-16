@@ -586,13 +586,16 @@ export const ChatImpl = memo(
       fetch('/api/user-settings')
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          if (!data?.apiKeys) {
+          const typedData = data as { apiKeys?: Record<string, string> } | null;
+
+          if (!typedData?.apiKeys) {
             return;
           }
 
           setApiKeys((prev) => {
-            const merged = { ...prev, ...data.apiKeys };
+            const merged = { ...prev, ...typedData.apiKeys };
             Cookies.set('apiKeys', JSON.stringify(merged));
+
             return merged;
           });
         })
@@ -610,6 +613,46 @@ export const ChatImpl = memo(
       setProvider(newProvider);
       Cookies.set('selectedProvider', newProvider.name, { expires: 30 });
     };
+
+    useEffect(() => {
+      const onProviderChanged = (event: Event) => {
+        const providerName = (event as CustomEvent<{ provider?: string }>).detail?.provider;
+
+        if (!providerName) {
+          return;
+        }
+
+        const nextProvider =
+          activeProviders.find((provider) => provider.name === providerName) ||
+          PROVIDER_LIST.find((provider) => provider.name === providerName);
+
+        if (!nextProvider) {
+          return;
+        }
+
+        setProvider(nextProvider as ProviderInfo);
+        Cookies.set('selectedProvider', nextProvider.name, { expires: 30 });
+      };
+
+      const onModelChanged = (event: Event) => {
+        const modelName = (event as CustomEvent<{ model?: string }>).detail?.model;
+
+        if (!modelName) {
+          return;
+        }
+
+        setModel(modelName);
+        Cookies.set('selectedModel', modelName, { expires: 30 });
+      };
+
+      window.addEventListener('bolt:provider-changed', onProviderChanged as EventListener);
+      window.addEventListener('bolt:model-changed', onModelChanged as EventListener);
+
+      return () => {
+        window.removeEventListener('bolt:provider-changed', onProviderChanged as EventListener);
+        window.removeEventListener('bolt:model-changed', onModelChanged as EventListener);
+      };
+    }, [activeProviders]);
 
     const handleWebSearchResult = useCallback(
       (result: string) => {

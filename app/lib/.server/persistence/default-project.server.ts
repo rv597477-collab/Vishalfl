@@ -9,6 +9,7 @@ export async function ensureDefaultProject(userId: string): Promise<ProjectRow> 
   }
 
   const slug = `default-${randomUUID().slice(0, 8)}`;
+
   return createProject({
     userId,
     slug,

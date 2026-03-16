@@ -20,6 +20,7 @@ import type { DesignScheme } from '~/types/design-scheme';
 import type { ElementInfo } from '~/components/workbench/Inspector';
 import { McpTools } from './MCPTools';
 import { WebSearch } from './WebSearch.client';
+import type { ProgressAnnotation } from '~/types/context';
 
 interface ChatBoxProps {
   isModelSettingsCollapsed: boolean;
@@ -63,13 +64,37 @@ interface ChatBoxProps {
   setDesignScheme?: (scheme: DesignScheme) => void;
   selectedElement?: ElementInfo | null;
   setSelectedElement?: ((element: ElementInfo | null) => void) | undefined;
+  progressAnnotations?: ProgressAnnotation[];
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = (props) => {
+  const latestProgress = props.progressAnnotations?.[props.progressAnnotations.length - 1];
+  const latestMessage = latestProgress?.message?.toLowerCase() || '';
+  const hasFailure = /fail|error|unable|timed out/.test(latestMessage);
+  const completed = !props.isStreaming && !!latestProgress;
+
+  let activeStage: 'generating' | 'editing files' | 'running build' = 'generating';
+
+  if (/file|edit|write|create|modify|patch/.test(latestMessage)) {
+    activeStage = 'editing files';
+  }
+
+  if (/build|compile|pnpm|npm|bun|test|run/.test(latestMessage)) {
+    activeStage = 'running build';
+  }
+
+  const stageItems = [
+    { key: 'generating', icon: 'i-ph:sparkle' },
+    { key: 'editing files', icon: 'i-ph:pencil-simple' },
+    { key: 'running build', icon: 'i-ph:terminal-window' },
+    { key: 'completed', icon: 'i-ph:check-circle' },
+    { key: 'failed', icon: 'i-ph:warning-circle' },
+  ] as const;
+
   return (
     <div
       className={classNames(
-        'relative bg-bolt-elements-background-depth-2 backdrop-blur p-3 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
+        'relative bg-bolt-elements-background-depth-2/95 backdrop-blur p-4 rounded-2xl border border-bolt-elements-borderColor shadow-[0_16px_48px_-28px_rgba(0,0,0,0.65)] relative w-full max-w-chat mx-auto z-prompt',
 
         /*
          * {
@@ -134,6 +159,34 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
           )}
         </ClientOnly>
       </div>
+
+      <div className="mb-3 grid grid-cols-2 md:grid-cols-5 gap-1.5">
+        {stageItems.map((stage) => {
+          const isActive = props.isStreaming && stage.key === activeStage;
+          const isCompleted = completed && stage.key === 'completed';
+          const isFailed = hasFailure && stage.key === 'failed';
+
+          return (
+            <div
+              key={stage.key}
+              className={classNames(
+                'rounded-lg border px-2 py-1.5 text-[11px] uppercase tracking-[0.08em] flex items-center gap-1.5 transition-colors',
+                'border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 text-bolt-elements-textTertiary',
+                {
+                  'text-bolt-elements-item-contentAccent border-bolt-elements-item-backgroundAccent bg-bolt-elements-item-backgroundAccent/15':
+                    isActive,
+                  'text-green-500 border-green-500/40 bg-green-500/10': isCompleted,
+                  'text-red-500 border-red-500/40 bg-red-500/10': isFailed,
+                },
+              )}
+            >
+              <span className={stage.icon} />
+              <span className="truncate">{stage.key}</span>
+            </div>
+          );
+        })}
+      </div>
+
       <FilePreview
         files={props.uploadedFiles}
         imageDataList={props.imageDataList}
@@ -169,12 +222,14 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
         </div>
       )}
       <div
-        className={classNames('relative shadow-xs border border-bolt-elements-borderColor backdrop-blur rounded-lg')}
+        className={classNames(
+          'relative shadow-xs border border-bolt-elements-borderColor/80 backdrop-blur rounded-xl bg-bolt-elements-background-depth-1/70',
+        )}
       >
         <textarea
           ref={props.textareaRef}
           className={classNames(
-            'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-sm',
+            'w-full pl-5 pt-5 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-[15px] leading-6',
             'transition-all duration-200',
             'hover:border-bolt-elements-focus',
           )}

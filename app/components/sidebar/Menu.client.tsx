@@ -365,7 +365,7 @@ export const Menu = () => {
             <div className="flex gap-2">
               <a
                 href="/"
-                className="flex-1 flex gap-2 items-center bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-500/20 rounded-lg px-4 py-2 transition-colors"
+                className="flex-1 flex gap-2 items-center bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent hover:opacity-90 rounded-lg px-4 py-2 transition-all"
               >
                 <span className="inline-block i-ph:plus-circle h-4 w-4" />
                 <span className="text-sm font-medium">Start new chat</span>
@@ -383,6 +383,41 @@ export const Menu = () => {
                 <span className={selectionMode ? 'i-ph:x h-4 w-4' : 'i-ph:check-square h-4 w-4'} />
               </button>
             </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <a
+                href="/"
+                className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 px-3 py-2 text-xs text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 transition-colors flex items-center gap-2"
+              >
+                <span className="i-ph:stack" />
+                Projects
+              </a>
+              <button
+                onClick={() => {
+                  const el = document.getElementById('history-list');
+                  el?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 px-3 py-2 text-xs text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 transition-colors flex items-center gap-2"
+              >
+                <span className="i-ph:chat-circle-text" />
+                Chats
+              </button>
+              <button
+                onClick={handleSettingsClick}
+                className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 px-3 py-2 text-xs text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 transition-colors flex items-center gap-2"
+              >
+                <span className="i-ph:sliders-horizontal" />
+                Settings
+              </button>
+              <button
+                onClick={handleSettingsClick}
+                className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 px-3 py-2 text-xs text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 transition-colors flex items-center gap-2"
+              >
+                <span className="i-ph:plugs-connected" />
+                Integrations
+              </button>
+            </div>
+
             <div className="relative w-full">
               <div className="absolute left-3 top-1/2 -translate-y-1/2">
                 <span className="i-ph:magnifying-glass h-4 w-4 text-gray-400 dark:text-gray-500" />
@@ -414,7 +449,7 @@ export const Menu = () => {
               </div>
             )}
           </div>
-          <div className="flex-1 overflow-auto px-3 pb-3">
+          <div id="history-list" className="flex-1 overflow-auto px-3 pb-3">
             {filteredList.length === 0 && (
               <div className="px-4 text-gray-500 dark:text-gray-400 text-sm">
                 {list.length === 0 ? 'No previous conversations' : 'No matches found'}

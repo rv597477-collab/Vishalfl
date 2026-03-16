@@ -18,19 +18,25 @@ function useServerPersistence(): boolean {
 
 async function serverGetAll(): Promise<ChatHistoryItem[]> {
   const response = await fetch('/api/chat-history', { credentials: 'include' });
+
   if (!response.ok) {
     throw new Error('Failed to load chats from server');
   }
-  const payload = await response.json();
+
+  const payload = (await response.json()) as { chats?: ChatHistoryItem[] };
+
   return payload.chats ?? [];
 }
 
 async function serverGetMessages(id: string): Promise<ChatHistoryItem | undefined> {
   const response = await fetch(`/api/chat-history?id=${encodeURIComponent(id)}`, { credentials: 'include' });
+
   if (!response.ok) {
     throw new Error('Failed to load chat from server');
   }
-  const payload = await response.json();
+
+  const payload = (await response.json()) as { chat?: ChatHistoryItem };
+
   return payload.chat ?? undefined;
 }
 
@@ -141,30 +147,29 @@ export async function setMessages(
 ): Promise<void> {
   if (useServerPersistence()) {
     await serverSetMessages(id, messages, urlId, description, timestamp, metadata);
-    return;
-  }
+  } else {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction('chats', 'readwrite');
+      const store = transaction.objectStore('chats');
 
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction('chats', 'readwrite');
-    const store = transaction.objectStore('chats');
+      if (timestamp && isNaN(Date.parse(timestamp))) {
+        reject(new Error('Invalid timestamp'));
+        return;
+      }
 
-    if (timestamp && isNaN(Date.parse(timestamp))) {
-      reject(new Error('Invalid timestamp'));
-      return;
-    }
+      const request = store.put({
+        id,
+        messages,
+        urlId,
+        description,
+        timestamp: timestamp ?? new Date().toISOString(),
+        metadata,
+      });
 
-    const request = store.put({
-      id,
-      messages,
-      urlId,
-      description,
-      timestamp: timestamp ?? new Date().toISOString(),
-      metadata,
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
     });
-
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  }
 }
 
 export async function getMessages(db: IDBDatabase, id: string): Promise<ChatHistoryItem> {
@@ -207,51 +212,50 @@ export async function getMessagesById(db: IDBDatabase, id: string): Promise<Chat
 export async function deleteById(db: IDBDatabase, id: string): Promise<void> {
   if (useServerPersistence()) {
     await serverDeleteById(id);
-    return;
-  }
+  } else {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['chats', 'snapshots'], 'readwrite'); // Add snapshots store to transaction
+      const chatStore = transaction.objectStore('chats');
+      const snapshotStore = transaction.objectStore('snapshots');
 
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['chats', 'snapshots'], 'readwrite'); // Add snapshots store to transaction
-    const chatStore = transaction.objectStore('chats');
-    const snapshotStore = transaction.objectStore('snapshots');
+      const deleteChatRequest = chatStore.delete(id);
+      const deleteSnapshotRequest = snapshotStore.delete(id); // Also delete snapshot
 
-    const deleteChatRequest = chatStore.delete(id);
-    const deleteSnapshotRequest = snapshotStore.delete(id); // Also delete snapshot
+      let chatDeleted = false;
+      let snapshotDeleted = false;
 
-    let chatDeleted = false;
-    let snapshotDeleted = false;
+      const checkCompletion = () => {
+        if (chatDeleted && snapshotDeleted) {
+          resolve(undefined);
+        }
+      };
 
-    const checkCompletion = () => {
-      if (chatDeleted && snapshotDeleted) {
-        resolve(undefined);
-      }
-    };
+      deleteChatRequest.onsuccess = () => {
+        chatDeleted = true;
+        checkCompletion();
+      };
+      deleteChatRequest.onerror = () => reject(deleteChatRequest.error);
 
-    deleteChatRequest.onsuccess = () => {
-      chatDeleted = true;
-      checkCompletion();
-    };
-    deleteChatRequest.onerror = () => reject(deleteChatRequest.error);
-
-    deleteSnapshotRequest.onsuccess = () => {
-      snapshotDeleted = true;
-      checkCompletion();
-    };
-
-    deleteSnapshotRequest.onerror = (event) => {
-      if ((event.target as IDBRequest).error?.name === 'NotFoundError') {
+      deleteSnapshotRequest.onsuccess = () => {
         snapshotDeleted = true;
         checkCompletion();
-      } else {
-        reject(deleteSnapshotRequest.error);
-      }
-    };
+      };
 
-    transaction.oncomplete = () => {
-      // This might resolve before checkCompletion if one operation finishes much faster
-    };
-    transaction.onerror = () => reject(transaction.error);
-  });
+      deleteSnapshotRequest.onerror = (event) => {
+        if ((event.target as IDBRequest).error?.name === 'NotFoundError') {
+          snapshotDeleted = true;
+          checkCompletion();
+        } else {
+          reject(deleteSnapshotRequest.error);
+        }
+      };
+
+      transaction.oncomplete = () => {
+        // This might resolve before checkCompletion if one operation finishes much faster
+      };
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
 }
 
 export async function getNextId(db: IDBDatabase): Promise<string> {

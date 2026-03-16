@@ -34,6 +34,7 @@ export async function requireUserId(request: Request): Promise<string> {
 export async function setUserSession(userId: string, request: Request): Promise<string> {
   const session = await getSession(request);
   session.set('userId', userId);
+
   return sessionStorage.commitSession(session);
 }
 

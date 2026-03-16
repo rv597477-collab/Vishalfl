@@ -65,6 +65,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     const messages = await listMessagesByChat(chatByUrlId.id, userId);
+
     return json({ chat: toChatHistory(chatByUrlId, messages) });
   }
 

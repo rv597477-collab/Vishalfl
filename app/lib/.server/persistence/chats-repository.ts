@@ -39,7 +39,11 @@ export interface UpdateChatInput {
   metadataJson?: string;
 }
 
-export async function listChatsByProject(projectId: string, userId: string, pagination?: Pagination): Promise<ChatRow[]> {
+export async function listChatsByProject(
+  projectId: string,
+  userId: string,
+  pagination?: Pagination,
+): Promise<ChatRow[]> {
   const client = getTursoClient();
   const sql = withPagination(
     `
@@ -51,6 +55,7 @@ export async function listChatsByProject(projectId: string, userId: string, pagi
     pagination,
   );
   const result = await client.execute({ sql, args: [projectId, userId] });
+
   return (result.rows as unknown as ChatRow[]) || [];
 }
 
@@ -60,6 +65,7 @@ export async function getChatById(chatId: string, userId: string): Promise<ChatR
     sql: `SELECT * FROM chats WHERE id = ? AND user_id = ? LIMIT 1`,
     args: [chatId, userId],
   });
+
   return (result.rows[0] as unknown as ChatRow) || null;
 }
 
@@ -74,6 +80,7 @@ export async function getChatByUrlId(projectId: string, urlId: string, userId: s
     `,
     args: [projectId, urlId, userId],
   });
+
   return (result.rows[0] as unknown as ChatRow) || null;
 }
 
@@ -105,6 +112,7 @@ export async function createChat(input: CreateChatInput): Promise<ChatRow> {
   });
 
   const created = await getChatById(id, input.userId);
+
   if (!created) {
     throw new Error('Failed to create chat');
   }

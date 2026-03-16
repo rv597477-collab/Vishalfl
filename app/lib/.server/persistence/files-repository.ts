@@ -61,6 +61,7 @@ export async function getFileByPath(projectId: string, filePath: string): Promis
     sql: `SELECT * FROM files WHERE project_id = ? AND path = ? LIMIT 1`,
     args: [projectId, filePath],
   });
+
   return (result.rows[0] as unknown as FileRow) || null;
 }
 
@@ -136,6 +137,7 @@ export async function upsertFile(input: UpsertFileInput): Promise<FileRow> {
   }
 
   const updated = await getFileByPath(input.projectId, input.path);
+
   if (!updated) {
     throw new Error('Failed to upsert file');
   }

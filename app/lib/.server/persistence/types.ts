@@ -16,5 +16,6 @@ export function fromDbBool(value: number | null | undefined): boolean {
 export function withPagination(query: string, pagination?: Pagination): string {
   const limit = pagination?.limit ?? 50;
   const offset = pagination?.offset ?? 0;
+
   return `${query} LIMIT ${limit} OFFSET ${offset}`;
 }

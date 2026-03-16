@@ -17,7 +17,7 @@ function getRequired(name: keyof TursoEnv, env: TursoEnv): string {
   return value;
 }
 
-export function createTursoClient(env: TursoEnv = process.env): Client {
+export function createTursoClient(env: TursoEnv = process.env as TursoEnv): Client {
   const url = getRequired('TURSO_DATABASE_URL', env);
   const authToken = getRequired('TURSO_AUTH_TOKEN', env);
 
@@ -27,7 +27,7 @@ export function createTursoClient(env: TursoEnv = process.env): Client {
   });
 }
 
-export function getTursoClient(env: TursoEnv = process.env): Client {
+export function getTursoClient(env: TursoEnv = process.env as TursoEnv): Client {
   if (!clientSingleton) {
     clientSingleton = createTursoClient(env);
   }

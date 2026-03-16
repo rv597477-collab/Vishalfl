@@ -37,16 +37,16 @@ export default function ProgressCompilation({ data }: { data?: ProgressAnnotatio
     <AnimatePresence>
       <div
         className={classNames(
-          'bg-bolt-elements-background-depth-2',
+          'bg-bolt-elements-background-depth-2/95',
           'border border-bolt-elements-borderColor',
-          'shadow-lg rounded-lg  relative w-full max-w-chat mx-auto z-prompt',
-          'p-1',
+          'shadow-[0_10px_30px_-20px_rgba(0,0,0,0.65)] rounded-xl relative w-full max-w-chat mx-auto z-prompt',
+          'p-1.5',
         )}
       >
         <div
           className={classNames(
             'bg-bolt-elements-item-backgroundAccent',
-            'p-1 rounded-lg text-bolt-elements-item-contentAccent',
+            'p-1.5 rounded-lg text-bolt-elements-item-contentAccent',
             'flex ',
           )}
         >
@@ -86,9 +86,11 @@ export default function ProgressCompilation({ data }: { data?: ProgressAnnotatio
 }
 
 const ProgressItem = ({ progress }: { progress: ProgressAnnotation }) => {
+  const isFailed = /fail|error|unable|timed out/i.test(progress.message);
+
   return (
     <motion.div
-      className={classNames('flex text-sm gap-3')}
+      className={classNames('flex text-sm gap-3 items-center py-0.5')}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -98,6 +100,8 @@ const ProgressItem = ({ progress }: { progress: ProgressAnnotation }) => {
         <div>
           {progress.status === 'in-progress' ? (
             <div className="i-svg-spinners:90-ring-with-bg"></div>
+          ) : isFailed ? (
+            <div className="i-ph:warning-circle text-red-500"></div>
           ) : progress.status === 'complete' ? (
             <div className="i-ph:check"></div>
           ) : null}

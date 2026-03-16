@@ -52,6 +52,7 @@ export async function listProjectsByUserId(userId: string, pagination?: Paginati
     pagination,
   );
   const result = await client.execute({ sql, args: [userId] });
+
   return (result.rows as unknown as ProjectRow[]) || [];
 }
 
@@ -61,6 +62,7 @@ export async function getProjectById(projectId: string, userId: string): Promise
     sql: `SELECT * FROM projects WHERE id = ? AND user_id = ? LIMIT 1`,
     args: [projectId, userId],
   });
+
   return (result.rows[0] as unknown as ProjectRow) || null;
 }
 
@@ -92,6 +94,7 @@ export async function createProject(input: CreateProjectInput): Promise<ProjectR
   });
 
   const created = await getProjectById(id, input.userId);
+
   if (!created) {
     throw new Error('Failed to create project');
   }

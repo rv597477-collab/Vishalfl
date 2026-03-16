@@ -41,7 +41,11 @@ export interface CreateMessageInput {
   tokenUsageJson?: string;
 }
 
-export async function listMessagesByChat(chatId: string, userId: string, pagination?: Pagination): Promise<MessageRow[]> {
+export async function listMessagesByChat(
+  chatId: string,
+  userId: string,
+  pagination?: Pagination,
+): Promise<MessageRow[]> {
   const client = getTursoClient();
   const sql = withPagination(
     `
@@ -54,6 +58,7 @@ export async function listMessagesByChat(chatId: string, userId: string, paginat
     pagination,
   );
   const result = await client.execute({ sql, args: [chatId, userId] });
+
   return (result.rows as unknown as MessageRow[]) || [];
 }
 
@@ -96,6 +101,7 @@ export async function appendMessage(input: CreateMessageInput): Promise<MessageR
   });
 
   const row = result.rows[0] as unknown as MessageRow | undefined;
+
   if (!row) {
     throw new Error('Failed to append message');
   }
@@ -105,9 +111,11 @@ export async function appendMessage(input: CreateMessageInput): Promise<MessageR
 
 export async function appendMessages(items: CreateMessageInput[]): Promise<MessageRow[]> {
   const inserted: MessageRow[] = [];
+
   for (const item of items) {
     inserted.push(await appendMessage(item));
   }
+
   return inserted;
 }
 

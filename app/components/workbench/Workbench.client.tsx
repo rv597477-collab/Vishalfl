@@ -308,6 +308,15 @@ export const Workbench = memo(
     const streaming = useStore(streamingState);
     const { exportChat } = useChatHistory();
     const [isSyncing, setIsSyncing] = useState(false);
+    const [layoutPreset, setLayoutPreset] = useState<'focus-chat' | 'balanced' | 'focus-code'>(() => {
+      if (typeof window === 'undefined') {
+        return 'balanced';
+      }
+
+      const stored = window.localStorage.getItem('bolt:workspace-layout');
+
+      return stored === 'focus-chat' || stored === 'focus-code' || stored === 'balanced' ? stored : 'balanced';
+    });
 
     const setSelectedView = (view: WorkbenchViewType) => {
       workbenchStore.currentView.set(view);
@@ -322,6 +331,18 @@ export const Workbench = memo(
     useEffect(() => {
       workbenchStore.setDocuments(files);
     }, [files]);
+
+    useEffect(() => {
+      const root = document.documentElement;
+      const widthByPreset: Record<'focus-chat' | 'balanced' | 'focus-code', string> = {
+        'focus-chat': '680px',
+        balanced: '533px',
+        'focus-code': '420px',
+      };
+
+      root.style.setProperty('--chat-min-width', widthByPreset[layoutPreset]);
+      window.localStorage.setItem('bolt:workspace-layout', layoutPreset);
+    }, [layoutPreset]);
 
     const onEditorChange = useCallback<OnEditorChange>((update) => {
       workbenchStore.setCurrentDocumentContent(update.content);
@@ -470,6 +491,41 @@ export const Workbench = memo(
                   {selectedView === 'diff' && (
                     <FileModifiedDropdown fileHistory={fileHistory} onSelectFile={handleSelectFile} />
                   )}
+                  <div className="hidden xl:flex items-center gap-1 rounded-lg border border-bolt-elements-borderColor p-0.5 ml-2">
+                    <button
+                      onClick={() => setLayoutPreset('focus-chat')}
+                      className={classNames('text-xs px-2 py-1 rounded-md transition-colors', {
+                        'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent':
+                          layoutPreset === 'focus-chat',
+                        'text-bolt-elements-textTertiary hover:bg-bolt-elements-background-depth-3':
+                          layoutPreset !== 'focus-chat',
+                      })}
+                    >
+                      Chat
+                    </button>
+                    <button
+                      onClick={() => setLayoutPreset('balanced')}
+                      className={classNames('text-xs px-2 py-1 rounded-md transition-colors', {
+                        'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent':
+                          layoutPreset === 'balanced',
+                        'text-bolt-elements-textTertiary hover:bg-bolt-elements-background-depth-3':
+                          layoutPreset !== 'balanced',
+                      })}
+                    >
+                      Split
+                    </button>
+                    <button
+                      onClick={() => setLayoutPreset('focus-code')}
+                      className={classNames('text-xs px-2 py-1 rounded-md transition-colors', {
+                        'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent':
+                          layoutPreset === 'focus-code',
+                        'text-bolt-elements-textTertiary hover:bg-bolt-elements-background-depth-3':
+                          layoutPreset !== 'focus-code',
+                      })}
+                    >
+                      Code
+                    </button>
+                  </div>
                   <IconButton
                     icon="i-ph:x-circle"
                     className="-mr-1"

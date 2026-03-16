@@ -66,6 +66,7 @@ export async function createActivityLog(input: CreateActivityLogInput): Promise<
   });
 
   const created = result.rows[0] as unknown as ActivityLogRow | undefined;
+
   if (!created) {
     throw new Error('Failed to create activity log');
   }
@@ -73,10 +74,7 @@ export async function createActivityLog(input: CreateActivityLogInput): Promise<
   return created;
 }
 
-export async function listActivityLogsByProject(
-  projectId: string,
-  pagination?: Pagination,
-): Promise<ActivityLogRow[]> {
+export async function listActivityLogsByProject(projectId: string, pagination?: Pagination): Promise<ActivityLogRow[]> {
   const client = getTursoClient();
   const sql = withPagination(
     `
@@ -96,10 +94,7 @@ export async function listActivityLogsByProject(
   return (result.rows as unknown as ActivityLogRow[]) || [];
 }
 
-export async function listActivityLogsByChat(
-  chatId: string,
-  pagination?: Pagination,
-): Promise<ActivityLogRow[]> {
+export async function listActivityLogsByChat(chatId: string, pagination?: Pagination): Promise<ActivityLogRow[]> {
   const client = getTursoClient();
   const sql = withPagination(
     `

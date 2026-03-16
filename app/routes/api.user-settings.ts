@@ -3,8 +3,10 @@ import { getUserId } from '~/lib/.server/auth/session.server';
 import { getTursoClient } from '~/lib/.server/db/turso';
 import { randomUUID } from 'node:crypto';
 
-// Simple per-user key-value store backed by Turso provider_settings table
-// The api_keys are stored as a JSON blob under provider 'api_keys' at user scope
+/*
+ * Simple per-user key-value store backed by Turso provider_settings table
+ * The api_keys are stored as a JSON blob under provider 'api_keys' at user scope
+ */
 
 const API_KEYS_PROVIDER = '__api_keys__';
 const PROVIDER_SETTINGS_PROVIDER = '__provider_settings__';
@@ -88,6 +90,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     await Promise.all(tasks);
+
     return json({ ok: true });
   } catch (err) {
     console.error('user-settings save error', err);

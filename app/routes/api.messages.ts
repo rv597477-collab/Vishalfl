@@ -19,6 +19,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const messages = await listMessagesByChat(chatId, userId);
+
   return json({ messages });
 }
 
@@ -38,6 +39,7 @@ export async function action({ request }: ActionFunctionArgs) {
   if (body.messages) {
     const withUser = body.messages.map((m) => ({ ...m, userId }));
     const saved = await appendMessages(withUser);
+
     return json({ messages: saved });
   }
 

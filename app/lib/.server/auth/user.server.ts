@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { getTursoClient } from '../db/turso';
+import { getTursoClient } from '~/lib/.server/db/turso';
 import type { GoogleUserInfo } from './google.server';
 
 export interface AppUser {

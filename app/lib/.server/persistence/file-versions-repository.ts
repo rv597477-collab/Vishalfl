@@ -84,6 +84,7 @@ export async function createFileVersion(input: CreateFileVersionInput): Promise<
   });
 
   const created = row.rows[0] as unknown as FileVersionRow | undefined;
+
   if (!created) {
     throw new Error('Failed to create file version');
   }

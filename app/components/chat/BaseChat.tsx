@@ -213,13 +213,15 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           fetch('/api/user-settings')
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
-              if (!data?.apiKeys) {
+              const typedData = data as { apiKeys?: Record<string, string> } | null;
+
+              if (!typedData?.apiKeys) {
                 return;
               }
 
               const mergedKeys = {
                 ...parsedApiKeys,
-                ...data.apiKeys,
+                ...typedData.apiKeys,
               };
 
               setApiKeys(mergedKeys);
@@ -382,12 +384,15 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         <div className="flex flex-col lg:flex-row overflow-y-auto w-full h-full">
           <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
             {!chatStarted && (
-              <div id="intro" className="mt-[16vh] max-w-2xl mx-auto text-center px-4 lg:px-0">
+              <div id="intro" className="mt-[14vh] max-w-3xl mx-auto text-center px-4 lg:px-0">
+                <p className="text-xs uppercase tracking-[0.2em] text-bolt-elements-textTertiary mb-4 animate-fade-in">
+                  Build Faster In One Workspace
+                </p>
                 <h1 className="text-3xl lg:text-6xl font-bold text-bolt-elements-textPrimary mb-4 animate-fade-in">
-                  Where ideas begin
+                  Design, build, and ship with AI
                 </h1>
                 <p className="text-md lg:text-xl mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200">
-                  Bring ideas to life in seconds or get help on existing projects.
+                  Start with a prompt, iterate in code, and preview everything side-by-side.
                 </p>
               </div>
             )}
@@ -499,6 +504,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   selectedElement={selectedElement}
                   setSelectedElement={setSelectedElement}
                   onWebSearchResult={onWebSearchResult}
+                  progressAnnotations={progressAnnotations}
                 />
               </div>
             </StickToBottom>
