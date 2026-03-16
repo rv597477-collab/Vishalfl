@@ -3,6 +3,8 @@ import { LLMManager } from '~/lib/modules/llm/manager';
 import type { ModelInfo } from '~/lib/modules/llm/types';
 import type { ProviderInfo } from '~/types/model';
 import { getApiKeysFromCookie, getProviderSettingsFromCookie } from '~/lib/api/cookies';
+import { getUserId } from '~/lib/.server/auth/session.server';
+import { getUserApiKeys, getUserProviderSettings } from '~/lib/.server/settings/user-settings.server';
 
 interface ModelsResponse {
   modelList: ModelInfo[];
@@ -55,8 +57,27 @@ export async function loader({
 
   // Get client side maintained API keys and provider settings from cookies
   const cookieHeader = request.headers.get('Cookie');
-  const apiKeys = getApiKeysFromCookie(cookieHeader);
-  const providerSettings = getProviderSettingsFromCookie(cookieHeader);
+  const cookieApiKeys = getApiKeysFromCookie(cookieHeader);
+  const cookieProviderSettings = getProviderSettingsFromCookie(cookieHeader);
+
+  let apiKeys = cookieApiKeys;
+  let providerSettings = cookieProviderSettings;
+
+  try {
+    const userId = await getUserId(request);
+
+    if (userId) {
+      const [dbApiKeys, dbProviderSettings] = await Promise.all([
+        getUserApiKeys(userId),
+        getUserProviderSettings(userId),
+      ]);
+
+      apiKeys = { ...cookieApiKeys, ...dbApiKeys };
+      providerSettings = { ...cookieProviderSettings, ...dbProviderSettings } as any;
+    }
+  } catch {
+    // Keep cookie fallback behavior if db/session is unavailable
+  }
 
   const { providers, defaultProvider } = getProviderInfo(llmManager);
 

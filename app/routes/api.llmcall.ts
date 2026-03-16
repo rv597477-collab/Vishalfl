@@ -8,6 +8,8 @@ import { LLMManager } from '~/lib/modules/llm/manager';
 import type { ModelInfo } from '~/lib/modules/llm/types';
 import { getApiKeysFromCookie, getProviderSettingsFromCookie } from '~/lib/api/cookies';
 import { createScopedLogger } from '~/utils/logger';
+import { getUserId } from '~/lib/.server/auth/session.server';
+import { getUserApiKeys, getUserProviderSettings } from '~/lib/.server/settings/user-settings.server';
 
 export async function action(args: ActionFunctionArgs) {
   return llmCallAction(args);
@@ -91,8 +93,27 @@ async function llmCallAction({ context, request }: ActionFunctionArgs) {
   }
 
   const cookieHeader = request.headers.get('Cookie');
-  const apiKeys = getApiKeysFromCookie(cookieHeader);
-  const providerSettings = getProviderSettingsFromCookie(cookieHeader);
+  const cookieApiKeys = getApiKeysFromCookie(cookieHeader);
+  const cookieProviderSettings = getProviderSettingsFromCookie(cookieHeader);
+
+  let apiKeys = cookieApiKeys;
+  let providerSettings = cookieProviderSettings;
+
+  try {
+    const userId = await getUserId(request);
+
+    if (userId) {
+      const [dbApiKeys, dbProviderSettings] = await Promise.all([
+        getUserApiKeys(userId),
+        getUserProviderSettings(userId),
+      ]);
+
+      apiKeys = { ...cookieApiKeys, ...dbApiKeys };
+      providerSettings = { ...cookieProviderSettings, ...dbProviderSettings } as any;
+    }
+  } catch {
+    // Keep cookie fallback behavior if db/session is unavailable
+  }
 
   if (streamOutput) {
     try {

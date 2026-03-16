@@ -57,6 +57,48 @@ const AUTO_ENABLED_KEY = 'auto_enabled_providers';
 // Add this helper function at the top of the file
 const isBrowser = typeof window !== 'undefined';
 
+async function loadUserSettingsFromServer(): Promise<{
+  apiKeys?: Record<string, string>;
+  providerSettings?: Record<string, IProviderConfig>;
+} | null> {
+  if (!isBrowser) {
+    return null;
+  }
+
+  try {
+    const response = await fetch('/api/user-settings');
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as {
+      apiKeys?: Record<string, string>;
+      providerSettings?: Record<string, IProviderConfig>;
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function saveProviderSettingsToServer(settings: ProviderSetting) {
+  if (!isBrowser) {
+    return;
+  }
+
+  try {
+    await fetch('/api/user-settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ providerSettings: settings }),
+    });
+  } catch {
+    // Keep local-only fallback if server persistence fails
+  }
+}
+
 // Interface for configured provider info from server
 interface ConfiguredProvider {
   name: string;
@@ -193,6 +235,30 @@ if (isBrowser) {
   // Use a small delay to ensure DOM and other resources are ready
   setTimeout(() => {
     autoEnableConfiguredProviders();
+
+    loadUserSettingsFromServer().then((data) => {
+      if (!data?.providerSettings) {
+        return;
+      }
+
+      const current = providersStore.get();
+      const merged: ProviderSetting = { ...current };
+
+      Object.entries(data.providerSettings).forEach(([provider, config]) => {
+        if (merged[provider]) {
+          merged[provider] = {
+            ...merged[provider],
+            settings: {
+              ...merged[provider].settings,
+              ...config.settings,
+            },
+          };
+        }
+      });
+
+      providersStore.set(merged);
+      localStorage.setItem(PROVIDER_SETTINGS_KEY, JSON.stringify(merged));
+    });
   }, 100);
 }
 
@@ -215,6 +281,7 @@ export const updateProviderSettings = (provider: string, settings: ProviderSetti
   // Save to localStorage
   const allSettings = providersStore.get();
   localStorage.setItem(PROVIDER_SETTINGS_KEY, JSON.stringify(allSettings));
+  saveProviderSettingsToServer(allSettings);
 
   // If this is a local provider, update the auto-enabled tracking
   if (LOCAL_PROVIDERS.includes(provider) && updatedProvider.settings.enabled !== undefined) {

@@ -208,6 +208,26 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         try {
           parsedApiKeys = getApiKeysFromCookies();
           setApiKeys(parsedApiKeys);
+
+          // Hydrate from server-side user settings when logged in
+          fetch('/api/user-settings')
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+              if (!data?.apiKeys) {
+                return;
+              }
+
+              const mergedKeys = {
+                ...parsedApiKeys,
+                ...data.apiKeys,
+              };
+
+              setApiKeys(mergedKeys);
+              Cookies.set('apiKeys', JSON.stringify(mergedKeys));
+            })
+            .catch(() => {
+              // Keep cookie/local fallback if server settings are unavailable
+            });
         } catch (error) {
           console.error('Error loading API keys from cookies:', error);
           Cookies.remove('apiKeys');
@@ -233,6 +253,17 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       const newApiKeys = { ...apiKeys, [providerName]: apiKey };
       setApiKeys(newApiKeys);
       Cookies.set('apiKeys', JSON.stringify(newApiKeys));
+
+      // Persist keys per authenticated user when available
+      fetch('/api/user-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ apiKeys: newApiKeys }),
+      }).catch(() => {
+        // Keep cookie/local fallback if server persistence fails
+      });
 
       setIsModelLoading(providerName);
 

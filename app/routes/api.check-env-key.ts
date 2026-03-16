@@ -1,6 +1,8 @@
 import type { LoaderFunction } from '@remix-run/cloudflare';
 import { LLMManager } from '~/lib/modules/llm/manager';
 import { getApiKeysFromCookie } from '~/lib/api/cookies';
+import { getUserId } from '~/lib/.server/auth/session.server';
+import { getUserApiKeys } from '~/lib/.server/settings/user-settings.server';
 
 export const loader: LoaderFunction = async ({ context, request }) => {
   const url = new URL(request.url);
@@ -21,7 +23,20 @@ export const loader: LoaderFunction = async ({ context, request }) => {
 
   // Get API keys from cookie
   const cookieHeader = request.headers.get('Cookie');
-  const apiKeys = getApiKeysFromCookie(cookieHeader);
+  const cookieApiKeys = getApiKeysFromCookie(cookieHeader);
+
+  let apiKeys = cookieApiKeys;
+
+  try {
+    const userId = await getUserId(request);
+
+    if (userId) {
+      const dbApiKeys = await getUserApiKeys(userId);
+      apiKeys = { ...cookieApiKeys, ...dbApiKeys };
+    }
+  } catch {
+    // Keep cookie fallback behavior if db/session is unavailable
+  }
 
   /*
    * Check API key in order of precedence:

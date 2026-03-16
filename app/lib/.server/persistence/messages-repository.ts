@@ -110,3 +110,14 @@ export async function appendMessages(items: CreateMessageInput[]): Promise<Messa
   }
   return inserted;
 }
+
+export async function deleteMessagesByChat(chatId: string, userId: string): Promise<void> {
+  const client = getTursoClient();
+  await client.execute({
+    sql: `
+      DELETE FROM messages
+      WHERE chat_id = ? AND user_id = ?
+    `,
+    args: [chatId, userId],
+  });
+}

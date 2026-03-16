@@ -582,6 +582,23 @@ export const ChatImpl = memo(
       if (storedApiKeys) {
         setApiKeys(JSON.parse(storedApiKeys));
       }
+
+      fetch('/api/user-settings')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data?.apiKeys) {
+            return;
+          }
+
+          setApiKeys((prev) => {
+            const merged = { ...prev, ...data.apiKeys };
+            Cookies.set('apiKeys', JSON.stringify(merged));
+            return merged;
+          });
+        })
+        .catch(() => {
+          // Keep cookie/local fallback if server settings are unavailable
+        });
     }, []);
 
     const handleModelChange = (newModel: string) => {

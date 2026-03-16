@@ -2,6 +2,7 @@ import type { Message } from 'ai';
 import { createScopedLogger } from '~/utils/logger';
 import type { ChatHistoryItem } from './useChatHistory';
 import type { Snapshot } from './types'; // Import Snapshot type
+import { authUserStore } from '~/lib/stores/auth';
 
 export interface IChatMetadata {
   gitUrl: string;
@@ -10,6 +11,69 @@ export interface IChatMetadata {
 }
 
 const logger = createScopedLogger('ChatHistory');
+
+function useServerPersistence(): boolean {
+  return !!authUserStore.get();
+}
+
+async function serverGetAll(): Promise<ChatHistoryItem[]> {
+  const response = await fetch('/api/chat-history', { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error('Failed to load chats from server');
+  }
+  const payload = await response.json();
+  return payload.chats ?? [];
+}
+
+async function serverGetMessages(id: string): Promise<ChatHistoryItem | undefined> {
+  const response = await fetch(`/api/chat-history?id=${encodeURIComponent(id)}`, { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error('Failed to load chat from server');
+  }
+  const payload = await response.json();
+  return payload.chat ?? undefined;
+}
+
+async function serverSetMessages(
+  id: string,
+  messages: Message[],
+  urlId?: string,
+  description?: string,
+  timestamp?: string,
+  metadata?: IChatMetadata,
+): Promise<void> {
+  const response = await fetch('/api/chat-history', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'setMessages',
+      id,
+      urlId,
+      description,
+      timestamp,
+      metadata,
+      messages,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to save chat to server');
+  }
+}
+
+async function serverDeleteById(id: string): Promise<void> {
+  const response = await fetch('/api/chat-history', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'delete', id }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete chat from server');
+  }
+}
 
 // this is used at the top level and never rejects
 export async function openDatabase(): Promise<IDBDatabase | undefined> {
@@ -52,6 +116,10 @@ export async function openDatabase(): Promise<IDBDatabase | undefined> {
 }
 
 export async function getAll(db: IDBDatabase): Promise<ChatHistoryItem[]> {
+  if (useServerPersistence()) {
+    return serverGetAll();
+  }
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction('chats', 'readonly');
     const store = transaction.objectStore('chats');
@@ -71,6 +139,11 @@ export async function setMessages(
   timestamp?: string,
   metadata?: IChatMetadata,
 ): Promise<void> {
+  if (useServerPersistence()) {
+    await serverSetMessages(id, messages, urlId, description, timestamp, metadata);
+    return;
+  }
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction('chats', 'readwrite');
     const store = transaction.objectStore('chats');
@@ -95,6 +168,16 @@ export async function setMessages(
 }
 
 export async function getMessages(db: IDBDatabase, id: string): Promise<ChatHistoryItem> {
+  if (useServerPersistence()) {
+    const chat = await serverGetMessages(id);
+
+    if (!chat) {
+      throw new Error('Chat not found');
+    }
+
+    return chat;
+  }
+
   return (await getMessagesById(db, id)) || (await getMessagesByUrlId(db, id));
 }
 
@@ -122,6 +205,11 @@ export async function getMessagesById(db: IDBDatabase, id: string): Promise<Chat
 }
 
 export async function deleteById(db: IDBDatabase, id: string): Promise<void> {
+  if (useServerPersistence()) {
+    await serverDeleteById(id);
+    return;
+  }
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['chats', 'snapshots'], 'readwrite'); // Add snapshots store to transaction
     const chatStore = transaction.objectStore('chats');

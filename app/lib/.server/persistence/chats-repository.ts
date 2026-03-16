@@ -63,6 +63,20 @@ export async function getChatById(chatId: string, userId: string): Promise<ChatR
   return (result.rows[0] as unknown as ChatRow) || null;
 }
 
+export async function getChatByUrlId(projectId: string, urlId: string, userId: string): Promise<ChatRow | null> {
+  const client = getTursoClient();
+  const result = await client.execute({
+    sql: `
+      SELECT *
+      FROM chats
+      WHERE project_id = ? AND url_id = ? AND user_id = ?
+      LIMIT 1
+    `,
+    args: [projectId, urlId, userId],
+  });
+  return (result.rows[0] as unknown as ChatRow) || null;
+}
+
 export async function createChat(input: CreateChatInput): Promise<ChatRow> {
   const client = getTursoClient();
   const id = randomUUID();

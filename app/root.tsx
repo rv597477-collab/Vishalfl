@@ -1,8 +1,10 @@
 import { useStore } from '@nanostores/react';
-import type { LinksFunction } from '@remix-run/cloudflare';
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
+import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/cloudflare';
+import { json } from '@remix-run/cloudflare';
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from '@remix-run/react';
 import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
 import { themeStore } from './lib/stores/theme';
+import { authUserStore, type AuthUser } from './lib/stores/auth';
 import { stripIndents } from './utils/stripIndent';
 import { createHead } from 'remix-island';
 import { useEffect } from 'react';
@@ -113,9 +115,39 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 import { logStore } from './lib/stores/logs';
+import { getUserId } from './lib/.server/auth/session.server';
+import { getUserById } from './lib/.server/auth/user.server';
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  try {
+    const userId = await getUserId(request);
+    if (userId) {
+      const user = await getUserById(userId);
+      if (user) {
+        return json({
+          user: {
+            id: user.id,
+            email: user.email,
+            display_name: user.display_name,
+            avatar_url: user.avatar_url,
+          } satisfies AuthUser,
+        });
+      }
+    }
+  } catch {
+    // Turso not configured or session error - graceful degradation
+  }
+  return json({ user: null });
+}
 
 export default function App() {
   const theme = useStore(themeStore);
+  const { user } = useLoaderData<typeof loader>();
+
+  // Sync server-loaded user into client store on every render
+  useEffect(() => {
+    authUserStore.set(user ?? null);
+  }, [user]);
 
   useEffect(() => {
     logStore.logSystem('Application initialized', {
