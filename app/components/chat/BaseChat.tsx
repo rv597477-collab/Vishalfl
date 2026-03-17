@@ -27,12 +27,14 @@ import ProgressCompilation from './ProgressCompilation';
 import type { ProgressAnnotation } from '~/types/context';
 import { SupabaseChatAlert } from '~/components/chat/SupabaseAlert';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
+import { workbenchStore } from '~/lib/stores/workbench';
 import { useStore } from '@nanostores/react';
 import { StickToBottom, useStickToBottomContext } from '~/lib/hooks';
 import { ChatBox } from './ChatBox';
 import type { DesignScheme } from '~/types/design-scheme';
 import type { ElementInfo } from '~/components/workbench/Inspector';
 import LlmErrorAlert from './LLMApiAlert';
+import { getActiveProjectId } from '~/lib/persistence/projects.client';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -152,6 +154,25 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         setQrModalOpen(true);
       }
     }, [expoUrl]);
+
+    useEffect(() => {
+      const loadProjectFiles = () => {
+        const activeProjectId = getActiveProjectId();
+
+        if (!activeProjectId) {
+          return;
+        }
+
+        workbenchStore.hydrateActiveProjectFiles(activeProjectId).catch(() => {
+          // Keep runtime flow resilient when file hydration is unavailable.
+        });
+      };
+
+      loadProjectFiles();
+      window.addEventListener('bolt:project-changed', loadProjectFiles);
+
+      return () => window.removeEventListener('bolt:project-changed', loadProjectFiles);
+    }, []);
 
     useEffect(() => {
       if (data) {
@@ -381,17 +402,30 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         data-chat-visible={showChat}
       >
         <ClientOnly>{() => <Menu />}</ClientOnly>
-        <div className="flex flex-col lg:flex-row overflow-y-auto w-full h-full">
+        <div className="flex flex-col lg:flex-row overflow-y-auto w-full h-full relative">
+          {!chatStarted && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  'radial-gradient(58% 42% at 50% 14%, rgba(59, 130, 246, 0.20) 0%, rgba(59, 130, 246, 0.10) 34%, rgba(59, 130, 246, 0.00) 72%), radial-gradient(44% 34% at 82% 20%, rgba(16, 185, 129, 0.14) 0%, rgba(16, 185, 129, 0.00) 72%), radial-gradient(34% 28% at 18% 18%, rgba(99, 102, 241, 0.16) 0%, rgba(99, 102, 241, 0.00) 72%)',
+              }}
+            />
+          )}
           <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
             {!chatStarted && (
-              <div id="intro" className="mt-[14vh] max-w-3xl mx-auto text-center px-4 lg:px-0">
-                <p className="text-xs uppercase tracking-[0.2em] text-bolt-elements-textTertiary mb-4 animate-fade-in">
+              <div id="intro" className="mt-[16vh] max-w-4xl mx-auto text-center px-6 lg:px-0 mb-4 lg:mb-10">
+                <p className="text-[11px] uppercase tracking-[0.26em] text-bolt-elements-textTertiary mb-6 animate-fade-in">
                   Build Faster In One Workspace
                 </p>
-                <h1 className="text-3xl lg:text-6xl font-bold text-bolt-elements-textPrimary mb-4 animate-fade-in">
-                  Design, build, and ship with AI
+                <h1 className="text-4xl leading-[1.1] tracking-[-0.02em] lg:text-7xl font-semibold text-bolt-elements-textPrimary mb-6 animate-fade-in">
+                  Design, build, and ship with{' '}
+                  <span className="bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-300 bg-clip-text text-transparent">
+                    AI
+                  </span>
                 </h1>
-                <p className="text-md lg:text-xl mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200">
+                <p className="text-base leading-7 tracking-[0.01em] lg:text-[1.32rem] lg:leading-9 mb-12 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 max-w-2xl mx-auto">
                   Start with a prompt, iterate in code, and preview everything side-by-side.
                 </p>
               </div>

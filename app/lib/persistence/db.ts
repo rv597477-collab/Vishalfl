@@ -3,6 +3,7 @@ import { createScopedLogger } from '~/utils/logger';
 import type { ChatHistoryItem } from './useChatHistory';
 import type { Snapshot } from './types'; // Import Snapshot type
 import { authUserStore } from '~/lib/stores/auth';
+import { getActiveProjectId } from './projects.client';
 
 export interface IChatMetadata {
   gitUrl: string;
@@ -17,7 +18,9 @@ function useServerPersistence(): boolean {
 }
 
 async function serverGetAll(): Promise<ChatHistoryItem[]> {
-  const response = await fetch('/api/chat-history', { credentials: 'include' });
+  const projectId = getActiveProjectId();
+  const query = projectId ? `?projectId=${encodeURIComponent(projectId)}` : '';
+  const response = await fetch(`/api/chat-history${query}`, { credentials: 'include' });
 
   if (!response.ok) {
     throw new Error('Failed to load chats from server');
@@ -29,7 +32,14 @@ async function serverGetAll(): Promise<ChatHistoryItem[]> {
 }
 
 async function serverGetMessages(id: string): Promise<ChatHistoryItem | undefined> {
-  const response = await fetch(`/api/chat-history?id=${encodeURIComponent(id)}`, { credentials: 'include' });
+  const projectId = getActiveProjectId();
+  const query = new URLSearchParams({ id });
+
+  if (projectId) {
+    query.set('projectId', projectId);
+  }
+
+  const response = await fetch(`/api/chat-history?${query.toString()}`, { credentials: 'include' });
 
   if (!response.ok) {
     throw new Error('Failed to load chat from server');
@@ -48,6 +58,7 @@ async function serverSetMessages(
   timestamp?: string,
   metadata?: IChatMetadata,
 ): Promise<void> {
+  const projectId = getActiveProjectId();
   const response = await fetch('/api/chat-history', {
     method: 'POST',
     credentials: 'include',
@@ -55,6 +66,7 @@ async function serverSetMessages(
     body: JSON.stringify({
       action: 'setMessages',
       id,
+      projectId,
       urlId,
       description,
       timestamp,
@@ -69,11 +81,12 @@ async function serverSetMessages(
 }
 
 async function serverDeleteById(id: string): Promise<void> {
+  const projectId = getActiveProjectId();
   const response = await fetch('/api/chat-history', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'delete', id }),
+    body: JSON.stringify({ action: 'delete', id, projectId }),
   });
 
   if (!response.ok) {

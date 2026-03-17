@@ -18,6 +18,14 @@ import { description } from '~/lib/persistence';
 import Cookies from 'js-cookie';
 import { createSampler } from '~/utils/sampler';
 import type { ActionAlert, DeployAlert, SupabaseAlert } from '~/types/actions';
+import {
+  loadPersistedFiles,
+  persistFileChange,
+  persistFileDelete,
+  type PersistedFileNode,
+} from '~/lib/persistence/files.client';
+import { getActiveProjectId } from '~/lib/persistence/projects.client';
+import { WORK_DIR } from '~/utils/constants';
 
 const { saveAs } = fileSaver;
 
@@ -222,7 +230,7 @@ export class WorkbenchStore {
     this.#editorStore.setSelectedFile(filePath);
   }
 
-  async saveFile(filePath: string) {
+  async saveFile(filePath: string, source: 'user' | 'ai' = 'user') {
     const documents = this.#editorStore.documents.get();
     const document = documents[filePath];
 
@@ -237,6 +245,16 @@ export class WorkbenchStore {
      */
 
     await this.#filesStore.saveFile(filePath, document.value);
+
+    persistFileChange({
+      path: filePath,
+      nodeType: 'file',
+      contentText: document.value,
+      isBinary: false,
+      source,
+    }).catch(() => {
+      // Keep runtime flow resilient when persistence is temporarily unavailable.
+    });
 
     const newUnsavedFiles = new Set(this.unsavedFiles.get());
     newUnsavedFiles.delete(filePath);
@@ -348,6 +366,16 @@ export class WorkbenchStore {
       const success = await this.#filesStore.createFile(filePath, content);
 
       if (success) {
+        persistFileChange({
+          path: filePath,
+          nodeType: 'file',
+          contentText: typeof content === 'string' ? content : '',
+          isBinary: content instanceof Uint8Array,
+          source: 'user',
+        }).catch(() => {
+          // Keep runtime flow resilient when persistence is temporarily unavailable.
+        });
+
         this.setSelectedFile(filePath);
 
         /*
@@ -370,7 +398,19 @@ export class WorkbenchStore {
 
   async createFolder(folderPath: string) {
     try {
-      return await this.#filesStore.createFolder(folderPath);
+      const success = await this.#filesStore.createFolder(folderPath);
+
+      if (success) {
+        persistFileChange({
+          path: folderPath,
+          nodeType: 'folder',
+          source: 'user',
+        }).catch(() => {
+          // Keep runtime flow resilient when persistence is temporarily unavailable.
+        });
+      }
+
+      return success;
     } catch (error) {
       console.error('Failed to create folder:', error);
       throw error;
@@ -385,6 +425,10 @@ export class WorkbenchStore {
       const success = await this.#filesStore.deleteFile(filePath);
 
       if (success) {
+        persistFileDelete(filePath).catch(() => {
+          // Keep runtime flow resilient when persistence is temporarily unavailable.
+        });
+
         const newUnsavedFiles = new Set(this.unsavedFiles.get());
 
         if (newUnsavedFiles.has(filePath)) {
@@ -422,6 +466,10 @@ export class WorkbenchStore {
       const success = await this.#filesStore.deleteFolder(folderPath);
 
       if (success) {
+        persistFileDelete(folderPath).catch(() => {
+          // Keep runtime flow resilient when persistence is temporarily unavailable.
+        });
+
         const unsavedFiles = this.unsavedFiles.get();
         const newUnsavedFiles = new Set<string>();
 
@@ -455,6 +503,79 @@ export class WorkbenchStore {
       console.error('Failed to delete folder:', error);
       throw error;
     }
+  }
+
+  async hydrateActiveProjectFiles(projectId?: string) {
+    const resolvedProjectId = projectId || getActiveProjectId();
+
+    if (!resolvedProjectId) {
+      return;
+    }
+
+    const persisted = await loadPersistedFiles(resolvedProjectId);
+    await this.#replaceRuntimeFiles(persisted);
+  }
+
+  async #replaceRuntimeFiles(files: PersistedFileNode[]) {
+    const wc = await webcontainer;
+    const currentFiles = Object.keys(this.#filesStore.files.get());
+
+    for (const currentPath of currentFiles.sort((a, b) => b.length - a.length)) {
+      const relativePath = path.relative(wc.workdir, currentPath);
+
+      if (!relativePath) {
+        continue;
+      }
+
+      try {
+        await wc.fs.rm(relativePath, { recursive: true });
+      } catch {
+        // Ignore missing entries while resetting the runtime layer.
+      }
+    }
+
+    this.#filesStore.files.set({});
+    this.unsavedFiles.set(new Set());
+
+    const folders = files.filter((entry) => entry.node_type === 'folder').sort((a, b) => a.path.length - b.path.length);
+    const regularFiles = files.filter((entry) => entry.node_type === 'file');
+
+    for (const folder of folders) {
+      const fullPath = folder.path.startsWith(WORK_DIR) ? folder.path : path.join(WORK_DIR, folder.path);
+      const relativePath = path.relative(wc.workdir, fullPath);
+
+      if (!relativePath) {
+        continue;
+      }
+
+      await wc.fs.mkdir(relativePath, { recursive: true });
+      this.#filesStore.files.setKey(fullPath, { type: 'folder' });
+    }
+
+    for (const file of regularFiles) {
+      const fullPath = file.path.startsWith(WORK_DIR) ? file.path : path.join(WORK_DIR, file.path);
+      const relativePath = path.relative(wc.workdir, fullPath);
+
+      if (!relativePath) {
+        continue;
+      }
+
+      const folderPath = path.dirname(relativePath);
+
+      if (folderPath && folderPath !== '.') {
+        await wc.fs.mkdir(folderPath, { recursive: true });
+      }
+
+      const content = file.content_text ?? '';
+      await wc.fs.writeFile(relativePath, content);
+      this.#filesStore.files.setKey(fullPath, {
+        type: 'file',
+        content,
+        isBinary: file.is_binary === 1,
+      });
+    }
+
+    this.setDocuments(this.#filesStore.files.get());
   }
 
   abortAllActions() {
@@ -588,7 +709,7 @@ export class WorkbenchStore {
       this.#editorStore.updateFile(fullPath, data.action.content);
 
       if (!isStreaming && data.action.content) {
-        await this.saveFile(fullPath);
+        await this.saveFile(fullPath, 'ai');
       }
 
       if (!isStreaming) {

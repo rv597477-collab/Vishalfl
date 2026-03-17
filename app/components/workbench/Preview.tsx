@@ -752,6 +752,12 @@ export const Preview = memo(({ setSelectedElement }: PreviewProps) => {
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Exit Full Screen' : 'Full Screen'}
           />
+          <IconButton
+            icon="i-ph:arrow-square-out"
+            onClick={openInNewTab}
+            title="Open in Browser"
+            disabled={!activePreview}
+          />
 
           <div className="flex items-center relative">
             <IconButton

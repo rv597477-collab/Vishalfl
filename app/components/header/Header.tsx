@@ -1,14 +1,21 @@
 import { useStore } from '@nanostores/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 import Cookies from 'js-cookie';
 import { chatStore } from '~/lib/stores/chat';
 import { classNames } from '~/utils/classNames';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
-import { ChatDescription } from '~/lib/persistence/ChatDescription.client';
 import { UserBadge } from './UserBadge.client';
 import { DEFAULT_PROVIDER, PROVIDER_LIST } from '~/utils/constants';
 import type { ModelInfo } from '~/lib/modules/llm/types';
+import { getActiveProjectId, setActiveProjectId } from '~/lib/persistence/projects.client';
+import { ActivityDrawer } from '~/components/activity/ActivityDrawer.client';
+
+interface ProjectItem {
+  id: string;
+  name: string;
+  status?: 'active' | 'archived' | 'deleted';
+}
 
 export function Header() {
   const chat = useStore(chatStore);
@@ -19,6 +26,35 @@ export function Header() {
   const [selectedModel, setSelectedModel] = useState<string>(
     () => (typeof document !== 'undefined' ? Cookies.get('selectedModel') : undefined) || '',
   );
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [activeProjectId, setActiveProjectState] = useState<string | null>(() => getActiveProjectId());
+  const [activityOpen, setActivityOpen] = useState(false);
+
+  const loadProjects = useCallback(async (preferredProjectId?: string | null) => {
+    const response = await fetch('/api/projects', { credentials: 'include' });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const payload = (await response.json()) as { projects?: ProjectItem[] };
+    const nextProjects = payload.projects ?? [];
+    setProjects(nextProjects);
+
+    if (!nextProjects.length) {
+      setActiveProjectState(null);
+      setActiveProjectId(null);
+
+      return;
+    }
+
+    const candidate = preferredProjectId ?? getActiveProjectId();
+    const exists = nextProjects.some((project) => project.id === candidate);
+    const selected = exists ? candidate : nextProjects[0].id;
+
+    setActiveProjectState(selected);
+    setActiveProjectId(selected);
+  }, []);
 
   useEffect(() => {
     fetch('/api/models')
@@ -34,6 +70,12 @@ export function Header() {
         // Keep graceful fallback when model API is unavailable.
       });
   }, []);
+
+  useEffect(() => {
+    loadProjects().catch(() => {
+      // Keep graceful fallback when project API is unavailable.
+    });
+  }, [loadProjects]);
 
   useEffect(() => {
     const syncFromCookies = () => {
@@ -86,6 +128,101 @@ export function Header() {
     window.dispatchEvent(new CustomEvent('bolt:model-changed', { detail: { model: modelName } }));
   };
 
+  const handleProjectChange = (projectId: string) => {
+    setActiveProjectState(projectId);
+    setActiveProjectId(projectId);
+
+    if (window.location.pathname !== '/') {
+      window.location.href = '/';
+    }
+  };
+
+  const handleCreateProject = async () => {
+    const name = window.prompt('Project name', 'New Project')?.trim();
+
+    if (!name) {
+      return;
+    }
+
+    const response = await fetch('/api/projects', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const payload = (await response.json()) as { project?: ProjectItem };
+
+    if (!payload.project) {
+      return;
+    }
+
+    await loadProjects(payload.project.id);
+    handleProjectChange(payload.project.id);
+  };
+
+  const handleRenameProject = async () => {
+    if (!activeProjectId) {
+      return;
+    }
+
+    const current = projects.find((project) => project.id === activeProjectId);
+    const nextName = window.prompt('Rename project', current?.name || 'Project')?.trim();
+
+    if (!nextName || nextName === current?.name) {
+      return;
+    }
+
+    await fetch('/api/projects', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', id: activeProjectId, name: nextName }),
+    });
+
+    await loadProjects(activeProjectId);
+  };
+
+  const handleArchiveProject = async () => {
+    if (!activeProjectId) {
+      return;
+    }
+
+    await fetch('/api/projects', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', id: activeProjectId, status: 'archived' }),
+    });
+
+    await loadProjects(activeProjectId);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!activeProjectId) {
+      return;
+    }
+
+    const ok = window.confirm('Delete this project? This hides it from the active project list.');
+
+    if (!ok) {
+      return;
+    }
+
+    await fetch('/api/projects', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', id: activeProjectId, status: 'deleted' }),
+    });
+
+    await loadProjects();
+  };
+
   return (
     <header
       className={classNames(
@@ -110,16 +247,57 @@ export function Header() {
       </div>
 
       <div className="hidden md:flex items-center gap-2 min-w-0">
-        <a
-          href="/"
-          className="h-9 px-3 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 transition-colors flex items-center gap-2"
-        >
+        <div className="h-9 px-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 transition-colors flex items-center gap-2">
           <span className="i-ph:stack text-base" />
-          <span>Project</span>
-          <span className="max-w-[180px] truncate text-bolt-elements-textSecondary">
-            <ClientOnly>{() => <ChatDescription />}</ClientOnly>
-          </span>
-        </a>
+          <select
+            value={activeProjectId ?? ''}
+            onChange={(event) => handleProjectChange(event.target.value)}
+            className="bg-transparent outline-none max-w-[180px] text-sm"
+            aria-label="Select project"
+          >
+            {projects.length ? (
+              projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.status === 'archived' ? `${project.name} (Archived)` : project.name}
+                </option>
+              ))
+            ) : (
+              <option value="">Project</option>
+            )}
+          </select>
+          <button
+            onClick={handleCreateProject}
+            className="inline-flex items-center justify-center w-6 h-6 rounded-md hover:bg-bolt-elements-background-depth-3"
+            title="Create project"
+            type="button"
+          >
+            <span className="i-ph:plus" />
+          </button>
+          <button
+            onClick={handleRenameProject}
+            className="inline-flex items-center justify-center w-6 h-6 rounded-md hover:bg-bolt-elements-background-depth-3"
+            title="Rename project"
+            type="button"
+          >
+            <span className="i-ph:pencil-simple" />
+          </button>
+          <button
+            onClick={handleArchiveProject}
+            className="inline-flex items-center justify-center w-6 h-6 rounded-md hover:bg-bolt-elements-background-depth-3"
+            title="Archive project"
+            type="button"
+          >
+            <span className="i-ph:archive" />
+          </button>
+          <button
+            onClick={handleDeleteProject}
+            className="inline-flex items-center justify-center w-6 h-6 rounded-md hover:bg-bolt-elements-background-depth-3"
+            title="Delete project"
+            type="button"
+          >
+            <span className="i-ph:trash" />
+          </button>
+        </div>
 
         <div className="h-9 px-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 flex items-center gap-2">
           <span className="i-ph:cpu text-bolt-elements-textTertiary" />
@@ -156,6 +334,15 @@ export function Header() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setActivityOpen(true)}
+          className="h-8 px-2.5 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 text-xs text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 flex items-center gap-1.5"
+          title="View activity"
+        >
+          <span className="i-ph:activity text-base" />
+          Activity
+        </button>
         {chat.started && (
           <ClientOnly>
             {() => (
@@ -167,6 +354,7 @@ export function Header() {
         )}
         <ClientOnly>{() => <UserBadge />}</ClientOnly>
       </div>
+      <ClientOnly>{() => <ActivityDrawer open={activityOpen} onClose={() => setActivityOpen(false)} />}</ClientOnly>
     </header>
   );
 }

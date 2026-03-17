@@ -25,6 +25,7 @@ import { workbenchStore } from '~/lib/stores/workbench';
 import { Search } from './Search'; // <-- Ensure Search is imported
 import { classNames } from '~/utils/classNames'; // <-- Import classNames if not already present
 import { LockManager } from './LockManager'; // <-- Import LockManager
+import { FileVersionHistory } from './FileVersionHistory';
 
 interface EditorPanelProps {
   files?: FileMap;
@@ -114,6 +115,14 @@ export const EditorPanel = memo(
                         >
                           Locks
                         </Tabs.Trigger>
+                        <Tabs.Trigger
+                          value="versions"
+                          className={classNames(
+                            'h-full bg-transparent hover:bg-bolt-elements-background-depth-3 py-0.5 px-2 rounded-lg text-sm font-medium text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary data-[state=active]:text-bolt-elements-textPrimary',
+                          )}
+                        >
+                          Versions
+                        </Tabs.Trigger>
                       </Tabs.List>
                     </div>
                   </PanelHeader>
@@ -137,6 +146,10 @@ export const EditorPanel = memo(
 
                   <Tabs.Content value="locks" className="flex-grow overflow-auto focus-visible:outline-none">
                     <LockManager />
+                  </Tabs.Content>
+
+                  <Tabs.Content value="versions" className="flex-grow overflow-auto focus-visible:outline-none">
+                    <FileVersionHistory selectedFile={selectedFile} />
                   </Tabs.Content>
                 </Tabs.Root>
               </div>

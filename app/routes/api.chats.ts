@@ -7,6 +7,7 @@ import {
   updateChat,
   softDeleteChat,
 } from '~/lib/.server/persistence/chats-repository';
+import { createActivityLog } from '~/lib/.server/persistence/activity-logs-repository';
 import { randomUUID } from 'node:crypto';
 
 // GET /api/chats?projectId=... — list chats for a project
@@ -49,6 +50,21 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (body.action === 'delete' && body.id) {
     await softDeleteChat(body.id, userId);
+
+    const chat = await getChatById(body.id, userId);
+
+    if (chat) {
+      await createActivityLog({
+        userId,
+        projectId: chat.project_id,
+        chatId: chat.id,
+        category: 'chat',
+        action: 'deleted',
+        summary: `Deleted chat ${chat.url_id}`,
+        source: 'chats-api',
+      });
+    }
+
     return json({ ok: true });
   }
 
@@ -76,6 +92,16 @@ export async function action({ request }: ActionFunctionArgs) {
     urlId,
     title: body.title,
     description: body.description,
+  });
+
+  await createActivityLog({
+    userId,
+    projectId: chat.project_id,
+    chatId: chat.id,
+    category: 'chat',
+    action: 'created',
+    summary: `Created chat ${chat.url_id}`,
+    source: 'chats-api',
   });
 
   return json({ chat });

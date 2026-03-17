@@ -22,6 +22,7 @@ import type { Snapshot } from './types';
 import { webcontainer } from '~/lib/webcontainer';
 import { detectProjectCommands, createCommandActionsString } from '~/utils/projectCommands';
 import type { ContextAnnotation } from '~/types/context';
+import { getActiveProjectId } from './projects.client';
 
 export interface ChatHistoryItem {
   id: string;
@@ -48,6 +49,24 @@ export function useChatHistory() {
   const [initialMessages, setInitialMessages] = useState<Message[]>([]);
   const [ready, setReady] = useState<boolean>(false);
   const [urlId, setUrlId] = useState<string | undefined>();
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(() => getActiveProjectId());
+
+  useEffect(() => {
+    const onProjectChanged = (event: Event) => {
+      const nextProjectId = (event as CustomEvent<{ projectId?: string | null }>).detail?.projectId ?? null;
+      setActiveProjectId(nextProjectId);
+
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
+    };
+
+    window.addEventListener('bolt:project-changed', onProjectChanged as EventListener);
+
+    return () => {
+      window.removeEventListener('bolt:project-changed', onProjectChanged as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     if (!db) {
@@ -195,7 +214,7 @@ ${value.content}
       // Handle case where there is no mixedId (e.g., new chat)
       setReady(true);
     }
-  }, [mixedId, db, navigate, searchParams]); // Added db, navigate, searchParams dependencies
+  }, [mixedId, db, navigate, searchParams, activeProjectId]); // Added db, navigate, searchParams dependencies
 
   const takeSnapshot = useCallback(
     async (chatIdx: string, files: FileMap, _chatId?: string | undefined, chatSummary?: string) => {

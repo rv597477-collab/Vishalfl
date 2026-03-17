@@ -267,6 +267,16 @@ export const Menu = () => {
     }
   }, [open, loadEntries]);
 
+  useEffect(() => {
+    const onProjectChanged = () => {
+      loadEntries();
+    };
+
+    window.addEventListener('bolt:project-changed', onProjectChanged);
+
+    return () => window.removeEventListener('bolt:project-changed', onProjectChanged);
+  }, [loadEntries]);
+
   // Exit selection mode when sidebar is closed
   useEffect(() => {
     if (!open && selectionMode) {

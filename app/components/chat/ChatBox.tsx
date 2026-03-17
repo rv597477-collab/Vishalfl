@@ -94,7 +94,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
   return (
     <div
       className={classNames(
-        'relative bg-bolt-elements-background-depth-2/95 backdrop-blur p-4 rounded-2xl border border-bolt-elements-borderColor shadow-[0_16px_48px_-28px_rgba(0,0,0,0.65)] relative w-full max-w-chat mx-auto z-prompt',
+        'relative bg-gradient-to-br from-bolt-elements-background-depth-2/88 via-bolt-elements-background-depth-2/84 to-bolt-elements-background-depth-3/82 backdrop-blur-xl p-5 lg:p-6 rounded-[20px] border border-white/10 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7),0_8px_20px_-18px_rgba(255,255,255,0.22)] relative w-full max-w-chat mx-auto z-prompt',
 
         /*
          * {

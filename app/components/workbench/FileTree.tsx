@@ -8,6 +8,7 @@ import { diffLines, type Change } from 'diff';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { toast } from 'react-toastify';
 import { path } from '~/utils/path';
+import { listFileVersions, restoreFileVersion } from '~/lib/persistence/files.client';
 
 const logger = createScopedLogger('FileTree');
 
@@ -402,6 +403,38 @@ function FileContextMenu({
     }
   };
 
+  const handleRestorePreviousVersion = async () => {
+    if (isFolder) {
+      return;
+    }
+
+    try {
+      const versions = await listFileVersions(fullPath);
+
+      if (versions.length < 2) {
+        toast.info('No previous version available for this file');
+        return;
+      }
+
+      const previousVersion = versions[1] as { version_no: number };
+      const restored = await restoreFileVersion(fullPath, previousVersion.version_no);
+      const restoredContent = restored.file?.contentText;
+
+      if (typeof restoredContent !== 'string') {
+        toast.error('Failed to restore file version');
+        return;
+      }
+
+      workbenchStore.setSelectedFile(fullPath);
+      workbenchStore.setCurrentDocumentContent(restoredContent);
+      await workbenchStore.saveCurrentDocument();
+      toast.success(`Restored to version ${previousVersion.version_no}`);
+    } catch (error) {
+      toast.error('Failed to restore previous version');
+      logger.error(error);
+    }
+  };
+
   // Handler for locking a file with full lock
   const handleLockFile = () => {
     try {
@@ -525,6 +558,12 @@ function FileContextMenu({
             <ContextMenu.Group className="p-1 border-t-px border-solid border-bolt-elements-borderColor">
               {!isFolder ? (
                 <>
+                  <ContextMenuItem onSelect={handleRestorePreviousVersion}>
+                    <div className="flex items-center gap-2">
+                      <div className="i-ph:clock-counter-clockwise" />
+                      Restore Previous Version
+                    </div>
+                  </ContextMenuItem>
                   <ContextMenuItem onSelect={handleLockFile}>
                     <div className="flex items-center gap-2">
                       <div className="i-ph:lock-simple" />
