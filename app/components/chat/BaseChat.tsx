@@ -415,24 +415,33 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           )}
           <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
             {!chatStarted && (
-              <div id="intro" className="mt-[12vh] max-w-4xl mx-auto text-center px-6 lg:px-0 mb-4 lg:mb-10">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-violet-500/10 border border-blue-500/20 mb-8 animate-fade-in backdrop-blur-sm">
-                  <span className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-violet-400 animate-pulse"></span>
-                  <span className="text-xs uppercase tracking-[0.2em] text-blue-400 font-medium">
-                    Build Faster In One Workspace
+              <div id="intro" className="mt-[10vh] max-w-4xl mx-auto text-center px-6 lg:px-0 mb-4 lg:mb-10">
+                <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl mb-10 animate-fade-in">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-gradient-to-r from-blue-400 to-violet-400"></span>
+                  </span>
+                  <span className="text-xs uppercase tracking-[0.25em] text-blue-300/90 font-medium">
+                    AI-Powered Builder
                   </span>
                 </div>
-                <h1 className="text-4xl leading-[1.08] tracking-[-0.03em] lg:text-6xl xl:text-7xl font-bold text-bolt-elements-textPrimary mb-6 animate-fade-in animation-delay-100">
-                  Where ideas become{' '}
+                <h1 className="text-4xl leading-[1.05] tracking-[-0.03em] lg:text-6xl xl:text-7xl font-bold text-white mb-8 animate-slide-up">
+                  What do you want to{' '}
                   <span className="relative inline-block">
-                    <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-blue-400 bg-[length:200%_auto] bg-clip-text text-transparent animate-[gradient-shift_4s_ease_infinite]">
-                      reality
+                    <span
+                      className="bg-gradient-to-r from-blue-400 via-violet-400 to-cyan-400 bg-[length:200%_auto] bg-clip-text text-transparent"
+                      style={{ animation: 'gradient-shift 4s ease infinite' }}
+                    >
+                      build?
                     </span>
-                    <span className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-violet-500/20 blur-2xl -z-10"></span>
+                    <span
+                      className="absolute -inset-x-4 -inset-y-2 bg-gradient-to-r from-blue-500/20 via-violet-500/20 to-cyan-500/20 blur-3xl -z-10"
+                      style={{ animation: 'glow-pulse 4s ease-in-out infinite' }}
+                    ></span>
                   </span>
                 </h1>
-                <p className="text-base leading-7 tracking-[0.01em] lg:text-lg xl:text-xl lg:leading-8 mb-12 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 max-w-2xl mx-auto">
-                  Describe your vision, watch AI build it, and ship in minutes. The future of development is here.
+                <p className="text-base leading-7 tracking-[0.01em] lg:text-xl lg:leading-8 mb-10 text-white/50 animate-slide-up animation-delay-100 max-w-2xl mx-auto font-light">
+                  Describe your app in plain English. Watch AI write the code and build it live.
                 </p>
               </div>
             )}

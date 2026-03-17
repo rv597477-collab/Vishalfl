@@ -1,8 +1,10 @@
-import { json, type LoaderFunctionArgs } from '@remix-run/cloudflare';
-import { default as IndexRoute } from './_index';
+import { type LoaderFunctionArgs, redirect } from '@remix-run/cloudflare';
 
 export async function loader(args: LoaderFunctionArgs) {
-  return json({ id: args.params.id });
+  // Redirect legacy /chat/:id routes to /app/:id
+  return redirect(`/app/${args.params.id}`);
 }
 
-export default IndexRoute;
+export default function ChatRedirect() {
+  return null;
+}

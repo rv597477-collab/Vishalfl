@@ -239,18 +239,19 @@ export function Header() {
           href="/"
           className="flex items-center gap-2.5 rounded-xl px-3 py-1.5 hover:bg-white/5 transition-all duration-200 group"
         >
-          <div className="relative">
-            <img src="/logo-light-styled.png" alt="logo" className="w-[78px] inline-block dark:hidden" />
-            <img
-              src="/logo-dark-styled.png"
-              alt="logo"
-              className="w-[78px] inline-block hidden dark:block group-hover:opacity-90 transition-opacity"
-            />
+          <div className="flex items-center gap-0.5">
+            <span className="text-lg font-bold text-white tracking-tight">Noefforts</span>
+            <span
+              className="text-lg font-bold bg-gradient-to-r from-blue-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent"
+              style={{ animation: 'gradient-shift 4s ease infinite', backgroundSize: '200% auto' }}
+            >
+              AI
+            </span>
           </div>
           <div className="hidden lg:flex items-center gap-1.5">
             <span className="w-px h-4 bg-bolt-elements-borderColor"></span>
             <span className="text-[10px] uppercase tracking-[0.15em] text-bolt-elements-textTertiary font-medium">
-              Workspace
+              Builder
             </span>
           </div>
         </a>
