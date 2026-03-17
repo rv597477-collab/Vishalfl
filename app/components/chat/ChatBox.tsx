@@ -94,13 +94,8 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
   return (
     <div
       className={classNames(
-        'relative bg-gradient-to-br from-bolt-elements-background-depth-2/88 via-bolt-elements-background-depth-2/84 to-bolt-elements-background-depth-3/82 backdrop-blur-xl p-5 lg:p-6 rounded-[20px] border border-white/10 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7),0_8px_20px_-18px_rgba(255,255,255,0.22)] relative w-full max-w-chat mx-auto z-prompt',
-
-        /*
-         * {
-         *   'sticky bottom-2': chatStarted,
-         * },
-         */
+        'relative backdrop-blur-2xl p-5 lg:p-6 rounded-2xl border border-white/[0.08] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.02)_inset] relative w-full max-w-chat mx-auto z-prompt',
+        'bg-gradient-to-b from-bolt-elements-background-depth-2/90 to-bolt-elements-background-depth-1/80',
       )}
     >
       <svg className={classNames(styles.PromptEffectContainer)}>
@@ -160,7 +155,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
         </ClientOnly>
       </div>
 
-      <div className="mb-3 grid grid-cols-2 md:grid-cols-5 gap-1.5">
+      <div className="mb-3.5 grid grid-cols-2 md:grid-cols-5 gap-1.5">
         {stageItems.map((stage) => {
           const isActive = props.isStreaming && stage.key === activeStage;
           const isCompleted = completed && stage.key === 'completed';
@@ -170,18 +165,17 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             <div
               key={stage.key}
               className={classNames(
-                'rounded-lg border px-2 py-1.5 text-[11px] uppercase tracking-[0.08em] flex items-center gap-1.5 transition-colors',
-                'border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 text-bolt-elements-textTertiary',
+                'rounded-lg border px-2.5 py-2 text-[10px] uppercase tracking-[0.1em] flex items-center gap-1.5 transition-all duration-300',
+                'border-white/[0.06] bg-white/[0.02] text-bolt-elements-textTertiary',
                 {
-                  'text-bolt-elements-item-contentAccent border-bolt-elements-item-backgroundAccent bg-bolt-elements-item-backgroundAccent/15':
-                    isActive,
-                  'text-green-500 border-green-500/40 bg-green-500/10': isCompleted,
-                  'text-red-500 border-red-500/40 bg-red-500/10': isFailed,
+                  'text-blue-400 border-blue-500/30 bg-blue-500/10 shadow-[0_0_12px_rgba(59,130,246,0.15)]': isActive,
+                  'text-emerald-400 border-emerald-500/30 bg-emerald-500/10': isCompleted,
+                  'text-red-400 border-red-500/30 bg-red-500/10': isFailed,
                 },
               )}
             >
-              <span className={stage.icon} />
-              <span className="truncate">{stage.key}</span>
+              <span className={classNames(stage.icon, isActive && 'animate-pulse')} />
+              <span className="truncate font-medium">{stage.key}</span>
             </div>
           );
         })}
@@ -223,7 +217,8 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
       )}
       <div
         className={classNames(
-          'relative shadow-xs border border-bolt-elements-borderColor/80 backdrop-blur rounded-xl bg-bolt-elements-background-depth-1/70',
+          'relative border border-white/[0.08] backdrop-blur-sm rounded-xl bg-white/[0.02] overflow-hidden',
+          'focus-within:border-blue-500/40 focus-within:shadow-[0_0_16px_rgba(59,130,246,0.12)] transition-all duration-300',
         )}
       >
         <textarea
@@ -231,7 +226,6 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
           className={classNames(
             'w-full pl-5 pt-5 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-[15px] leading-6',
             'transition-all duration-200',
-            'hover:border-bolt-elements-focus',
           )}
           onDragEnter={(e) => {
             e.preventDefault();

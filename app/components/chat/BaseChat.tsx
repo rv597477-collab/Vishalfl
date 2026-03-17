@@ -409,24 +409,30 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               className="pointer-events-none absolute inset-0"
               style={{
                 background:
-                  'radial-gradient(58% 42% at 50% 14%, rgba(59, 130, 246, 0.20) 0%, rgba(59, 130, 246, 0.10) 34%, rgba(59, 130, 246, 0.00) 72%), radial-gradient(44% 34% at 82% 20%, rgba(16, 185, 129, 0.14) 0%, rgba(16, 185, 129, 0.00) 72%), radial-gradient(34% 28% at 18% 18%, rgba(99, 102, 241, 0.16) 0%, rgba(99, 102, 241, 0.00) 72%)',
+                  'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 75% 10%, rgba(139, 92, 246, 0.12) 0%, transparent 60%), radial-gradient(ellipse 30% 30% at 25% 15%, rgba(96, 165, 250, 0.1) 0%, transparent 50%)',
               }}
             />
           )}
           <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
             {!chatStarted && (
-              <div id="intro" className="mt-[16vh] max-w-4xl mx-auto text-center px-6 lg:px-0 mb-4 lg:mb-10">
-                <p className="text-[11px] uppercase tracking-[0.26em] text-bolt-elements-textTertiary mb-6 animate-fade-in">
-                  Build Faster In One Workspace
-                </p>
-                <h1 className="text-4xl leading-[1.1] tracking-[-0.02em] lg:text-7xl font-semibold text-bolt-elements-textPrimary mb-6 animate-fade-in">
-                  Design, build, and ship with{' '}
-                  <span className="bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-300 bg-clip-text text-transparent">
-                    AI
+              <div id="intro" className="mt-[12vh] max-w-4xl mx-auto text-center px-6 lg:px-0 mb-4 lg:mb-10">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-violet-500/10 border border-blue-500/20 mb-8 animate-fade-in backdrop-blur-sm">
+                  <span className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-violet-400 animate-pulse"></span>
+                  <span className="text-xs uppercase tracking-[0.2em] text-blue-400 font-medium">
+                    Build Faster In One Workspace
+                  </span>
+                </div>
+                <h1 className="text-4xl leading-[1.08] tracking-[-0.03em] lg:text-6xl xl:text-7xl font-bold text-bolt-elements-textPrimary mb-6 animate-fade-in animation-delay-100">
+                  Where ideas become{' '}
+                  <span className="relative inline-block">
+                    <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-blue-400 bg-[length:200%_auto] bg-clip-text text-transparent animate-[gradient-shift_4s_ease_infinite]">
+                      reality
+                    </span>
+                    <span className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-violet-500/20 blur-2xl -z-10"></span>
                   </span>
                 </h1>
-                <p className="text-base leading-7 tracking-[0.01em] lg:text-[1.32rem] lg:leading-9 mb-12 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 max-w-2xl mx-auto">
-                  Start with a prompt, iterate in code, and preview everything side-by-side.
+                <p className="text-base leading-7 tracking-[0.01em] lg:text-lg xl:text-xl lg:leading-8 mb-12 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 max-w-2xl mx-auto">
+                  Describe your vision, watch AI build it, and ship in minutes. The future of development is here.
                 </p>
               </div>
             )}

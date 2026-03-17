@@ -1,28 +1,29 @@
 .rayContainer {
-  // Theme-specific colors
-  --ray-color-primary: color-mix(in srgb, var(--primary-color), transparent 30%);
-  --ray-color-secondary: color-mix(in srgb, var(--secondary-color), transparent 30%);
-  --ray-color-accent: color-mix(in srgb, var(--accent-color), transparent 30%);
+  // Premium Blue/Violet gradient colors
+  --ray-color-primary: color-mix(in srgb, var(--primary-color), transparent 40%);
+  --ray-color-secondary: color-mix(in srgb, var(--secondary-color), transparent 40%);
+  --ray-color-accent: color-mix(in srgb, var(--accent-color), transparent 40%);
 
-  // Theme-specific gradients
-  --ray-gradient-primary: radial-gradient(var(--ray-color-primary) 0%, transparent 70%);
-  --ray-gradient-secondary: radial-gradient(var(--ray-color-secondary) 0%, transparent 70%);
-  --ray-gradient-accent: radial-gradient(var(--ray-color-accent) 0%, transparent 70%);
+  // Smooth gradient falloffs
+  --ray-gradient-primary: radial-gradient(var(--ray-color-primary) 0%, transparent 65%);
+  --ray-gradient-secondary: radial-gradient(var(--ray-color-secondary) 0%, transparent 65%);
+  --ray-gradient-accent: radial-gradient(var(--ray-color-accent) 0%, transparent 65%);
 
   position: fixed;
   inset: 0;
   overflow: hidden;
-  animation: fadeIn 1.5s ease-out;
+  animation: fadeIn 2s ease-out;
   pointer-events: none;
   z-index: 0;
-  //   background-color: transparent;
 
   :global(html[data-theme='dark']) & {
     mix-blend-mode: screen;
+    opacity: 0.9;
   }
 
   :global(html[data-theme='light']) & {
     mix-blend-mode: multiply;
+    opacity: 0.3;
   }
 }
 
@@ -36,102 +37,102 @@
 
   :global(html[data-theme='light']) & {
     mix-blend-mode: multiply;
-    opacity: 0.4;
+    opacity: 0.3;
   }
 }
 
 .ray1 {
-  width: 600px;
-  height: 800px;
+  width: 700px;
+  height: 900px;
   background: var(--ray-gradient-primary);
-  transform: rotate(65deg);
-  top: -500px;
-  left: -100px;
-  filter: blur(80px);
-  opacity: 0.6;
-  animation: float1 15s infinite ease-in-out;
+  transform: rotate(55deg);
+  top: -550px;
+  left: -150px;
+  filter: blur(100px);
+  opacity: 0.5;
+  animation: float1 18s infinite ease-in-out;
 }
 
 .ray2 {
-  width: 400px;
-  height: 600px;
+  width: 500px;
+  height: 700px;
   background: var(--ray-gradient-secondary);
-  transform: rotate(-30deg);
-  top: -300px;
-  left: 200px;
-  filter: blur(60px);
-  opacity: 0.6;
-  animation: float2 18s infinite ease-in-out;
+  transform: rotate(-25deg);
+  top: -350px;
+  left: 250px;
+  filter: blur(80px);
+  opacity: 0.45;
+  animation: float2 22s infinite ease-in-out;
 }
 
 .ray3 {
-  width: 500px;
-  height: 400px;
+  width: 600px;
+  height: 500px;
   background: var(--ray-gradient-accent);
-  top: -320px;
-  left: 500px;
-  filter: blur(65px);
-  opacity: 0.5;
-  animation: float3 20s infinite ease-in-out;
+  top: -380px;
+  left: 550px;
+  filter: blur(85px);
+  opacity: 0.4;
+  animation: float3 25s infinite ease-in-out;
 }
 
 .ray4 {
-  width: 400px;
-  height: 450px;
+  width: 450px;
+  height: 550px;
   background: var(--ray-gradient-secondary);
-  top: -350px;
-  left: 800px;
-  filter: blur(55px);
-  opacity: 0.55;
-  animation: float4 17s infinite ease-in-out;
+  top: -400px;
+  left: 900px;
+  filter: blur(75px);
+  opacity: 0.45;
+  animation: float4 20s infinite ease-in-out;
 }
 
 .ray5 {
-  width: 350px;
-  height: 500px;
+  width: 400px;
+  height: 600px;
   background: var(--ray-gradient-primary);
-  transform: rotate(-45deg);
-  top: -250px;
-  left: 1000px;
-  filter: blur(45px);
-  opacity: 0.6;
-  animation: float5 16s infinite ease-in-out;
+  transform: rotate(-35deg);
+  top: -300px;
+  left: 1100px;
+  filter: blur(60px);
+  opacity: 0.5;
+  animation: float5 19s infinite ease-in-out;
 }
 
 .ray6 {
-  width: 300px;
-  height: 700px;
+  width: 350px;
+  height: 800px;
   background: var(--ray-gradient-accent);
-  transform: rotate(75deg);
-  top: -400px;
-  left: 600px;
-  filter: blur(75px);
-  opacity: 0.45;
-  animation: float6 19s infinite ease-in-out;
+  transform: rotate(70deg);
+  top: -450px;
+  left: 700px;
+  filter: blur(90px);
+  opacity: 0.35;
+  animation: float6 23s infinite ease-in-out;
 }
 
 .ray7 {
-  width: 450px;
-  height: 600px;
+  width: 500px;
+  height: 700px;
   background: var(--ray-gradient-primary);
-  transform: rotate(45deg);
-  top: -450px;
-  left: 350px;
-  filter: blur(65px);
-  opacity: 0.55;
-  animation: float7 21s infinite ease-in-out;
+  transform: rotate(40deg);
+  top: -500px;
+  left: 400px;
+  filter: blur(80px);
+  opacity: 0.45;
+  animation: float7 26s infinite ease-in-out;
 }
 
 .ray8 {
-  width: 380px;
-  height: 550px;
+  width: 420px;
+  height: 650px;
   background: var(--ray-gradient-secondary);
-  transform: rotate(-60deg);
-  top: -380px;
-  left: 750px;
-  filter: blur(58px);
-  opacity: 0.6;
-  animation: float8 14s infinite ease-in-out;
+  transform: rotate(-50deg);
+  top: -420px;
+  left: 850px;
+  filter: blur(70px);
+  opacity: 0.5;
+  animation: float8 17s infinite ease-in-out;
 }
 
 @keyframes float1 {

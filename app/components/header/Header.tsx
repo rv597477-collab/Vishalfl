@@ -226,33 +226,43 @@ export function Header() {
   return (
     <header
       className={classNames(
-        'flex items-center px-4 lg:px-6 border-b h-[var(--header-height)] gap-3 bg-bolt-elements-background-depth-2/90 backdrop-blur',
+        'flex items-center px-4 lg:px-6 border-b h-[var(--header-height)] gap-3 backdrop-blur-xl transition-all duration-300',
         {
-          'border-transparent': !chat.started,
-          'border-bolt-elements-borderColor': chat.started,
+          'border-transparent bg-transparent': !chat.started,
+          'border-bolt-elements-borderColor bg-bolt-elements-background-depth-1/80 shadow-[0_1px_0_0_rgba(255,255,255,0.03)]':
+            chat.started,
         },
       )}
     >
       <div className="flex items-center gap-2 z-logo text-bolt-elements-textPrimary">
         <a
           href="/"
-          className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-bolt-elements-background-depth-3 transition-colors"
+          className="flex items-center gap-2.5 rounded-xl px-3 py-1.5 hover:bg-white/5 transition-all duration-200 group"
         >
-          <img src="/logo-light-styled.png" alt="logo" className="w-[82px] inline-block dark:hidden" />
-          <img src="/logo-dark-styled.png" alt="logo" className="w-[82px] inline-block hidden dark:block" />
-          <span className="hidden lg:inline text-xs uppercase tracking-[0.16em] text-bolt-elements-textTertiary">
-            Workspace
-          </span>
+          <div className="relative">
+            <img src="/logo-light-styled.png" alt="logo" className="w-[78px] inline-block dark:hidden" />
+            <img
+              src="/logo-dark-styled.png"
+              alt="logo"
+              className="w-[78px] inline-block hidden dark:block group-hover:opacity-90 transition-opacity"
+            />
+          </div>
+          <div className="hidden lg:flex items-center gap-1.5">
+            <span className="w-px h-4 bg-bolt-elements-borderColor"></span>
+            <span className="text-[10px] uppercase tracking-[0.15em] text-bolt-elements-textTertiary font-medium">
+              Workspace
+            </span>
+          </div>
         </a>
       </div>
 
-      <div className="hidden md:flex items-center gap-2 min-w-0">
-        <div className="h-9 px-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 transition-colors flex items-center gap-2">
-          <span className="i-ph:stack text-base" />
+      <div className="hidden md:flex items-center gap-2.5 min-w-0">
+        <div className="h-9 px-3 rounded-xl border border-bolt-elements-borderColor bg-white/[0.02] backdrop-blur-sm text-sm text-bolt-elements-textPrimary hover:bg-white/[0.05] hover:border-white/15 transition-all duration-200 flex items-center gap-2.5 group">
+          <span className="i-ph:stack text-base text-bolt-elements-textTertiary group-hover:text-blue-400 transition-colors" />
           <select
             value={activeProjectId ?? ''}
             onChange={(event) => handleProjectChange(event.target.value)}
-            className="bg-transparent outline-none max-w-[180px] text-sm"
+            className="bg-transparent outline-none max-w-[160px] text-sm cursor-pointer"
             aria-label="Select project"
           >
             {projects.length ? (
@@ -265,46 +275,48 @@ export function Header() {
               <option value="">Project</option>
             )}
           </select>
-          <button
-            onClick={handleCreateProject}
-            className="inline-flex items-center justify-center w-6 h-6 rounded-md hover:bg-bolt-elements-background-depth-3"
-            title="Create project"
-            type="button"
-          >
-            <span className="i-ph:plus" />
-          </button>
-          <button
-            onClick={handleRenameProject}
-            className="inline-flex items-center justify-center w-6 h-6 rounded-md hover:bg-bolt-elements-background-depth-3"
-            title="Rename project"
-            type="button"
-          >
-            <span className="i-ph:pencil-simple" />
-          </button>
-          <button
-            onClick={handleArchiveProject}
-            className="inline-flex items-center justify-center w-6 h-6 rounded-md hover:bg-bolt-elements-background-depth-3"
-            title="Archive project"
-            type="button"
-          >
-            <span className="i-ph:archive" />
-          </button>
-          <button
-            onClick={handleDeleteProject}
-            className="inline-flex items-center justify-center w-6 h-6 rounded-md hover:bg-bolt-elements-background-depth-3"
-            title="Delete project"
-            type="button"
-          >
-            <span className="i-ph:trash" />
-          </button>
+          <div className="flex items-center gap-0.5 ml-1">
+            <button
+              onClick={handleCreateProject}
+              className="inline-flex items-center justify-center w-6 h-6 rounded-lg hover:bg-white/10 text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary transition-all"
+              title="Create project"
+              type="button"
+            >
+              <span className="i-ph:plus text-sm" />
+            </button>
+            <button
+              onClick={handleRenameProject}
+              className="inline-flex items-center justify-center w-6 h-6 rounded-lg hover:bg-white/10 text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary transition-all"
+              title="Rename project"
+              type="button"
+            >
+              <span className="i-ph:pencil-simple text-sm" />
+            </button>
+            <button
+              onClick={handleArchiveProject}
+              className="inline-flex items-center justify-center w-6 h-6 rounded-lg hover:bg-white/10 text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary transition-all"
+              title="Archive project"
+              type="button"
+            >
+              <span className="i-ph:archive text-sm" />
+            </button>
+            <button
+              onClick={handleDeleteProject}
+              className="inline-flex items-center justify-center w-6 h-6 rounded-lg hover:bg-white/10 text-bolt-elements-textTertiary hover:text-red-400 transition-all"
+              title="Delete project"
+              type="button"
+            >
+              <span className="i-ph:trash text-sm" />
+            </button>
+          </div>
         </div>
 
-        <div className="h-9 px-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 flex items-center gap-2">
-          <span className="i-ph:cpu text-bolt-elements-textTertiary" />
+        <div className="h-9 px-3 rounded-xl border border-bolt-elements-borderColor bg-white/[0.02] backdrop-blur-sm flex items-center gap-2.5 group hover:bg-white/[0.05] hover:border-white/15 transition-all duration-200">
+          <span className="i-ph:cpu text-bolt-elements-textTertiary group-hover:text-violet-400 transition-colors" />
           <select
             value={selectedProvider}
             onChange={(event) => handleProviderChange(event.target.value)}
-            className="bg-transparent text-xs text-bolt-elements-textPrimary outline-none"
+            className="bg-transparent text-xs text-bolt-elements-textPrimary outline-none cursor-pointer"
             aria-label="Select provider"
           >
             {PROVIDER_LIST.map((provider) => (
@@ -317,7 +329,7 @@ export function Header() {
           <select
             value={selectedModel}
             onChange={(event) => handleModelChange(event.target.value)}
-            className="bg-transparent text-xs text-bolt-elements-textPrimary outline-none max-w-[180px]"
+            className="bg-transparent text-xs text-bolt-elements-textSecondary outline-none max-w-[160px] cursor-pointer hover:text-bolt-elements-textPrimary transition-colors"
             aria-label="Select model"
           >
             {providerModels.length > 0 ? (
@@ -333,15 +345,15 @@ export function Header() {
         </div>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2.5">
         <button
           type="button"
           onClick={() => setActivityOpen(true)}
-          className="h-8 px-2.5 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 text-xs text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 flex items-center gap-1.5"
+          className="h-8 px-3 rounded-xl border border-bolt-elements-borderColor bg-white/[0.02] text-xs text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary hover:bg-white/[0.05] hover:border-white/15 flex items-center gap-2 transition-all duration-200"
           title="View activity"
         >
           <span className="i-ph:activity text-base" />
-          Activity
+          <span className="hidden sm:inline">Activity</span>
         </button>
         {chat.started && (
           <ClientOnly>
