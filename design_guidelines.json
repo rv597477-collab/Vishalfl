@@ -1,0 +1,158 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "Bolt Enhanced",
+      "archetype": "The Performance Pro",
+      "mood": "Cyber-Minimalist, Premium, Electric, Developer-Centric",
+      "theme_strategy": "Dark Mode Primary (Light Mode Secondary)"
+    },
+    "typography": {
+      "font_family": {
+        "heading": "Inter, system-ui, sans-serif",
+        "body": "Inter, system-ui, sans-serif",
+        "code": "JetBrains Mono, Fira Code, monospace"
+      },
+      "scaling": {
+        "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+        "h2": "text-3xl font-semibold tracking-tight",
+        "h3": "text-2xl font-semibold tracking-normal",
+        "body": "text-base leading-relaxed text-bolt-elements-textSecondary",
+        "small": "text-sm text-bolt-elements-textTertiary"
+      }
+    },
+    "colors": {
+      "palette": {
+        "gray": {
+          "50": "#fafafa",
+          "100": "#f4f4f5",
+          "200": "#e4e4e7",
+          "300": "#d4d4d8",
+          "400": "#a1a1aa",
+          "500": "#71717a",
+          "600": "#52525b",
+          "700": "#3f3f46",
+          "800": "#27272a",
+          "900": "#18181b",
+          "950": "#09090b"
+        },
+        "accent": {
+          "50": "#eff6ff",
+          "100": "#dbeafe",
+          "200": "#bfdbfe",
+          "300": "#93c5fd",
+          "400": "#60a5fa",
+          "500": "#3b82f6",
+          "600": "#2563eb",
+          "700": "#1d4ed8",
+          "800": "#1e40af",
+          "900": "#1e3a8a",
+          "950": "#172554"
+        }
+      },
+      "tokens": {
+        "background": {
+          "depth_1": "#09090b",
+          "depth_2": "#18181b",
+          "depth_3": "#27272a",
+          "depth_4": "rgba(255, 255, 255, 0.05)"
+        },
+        "border": {
+          "default": "rgba(255, 255, 255, 0.1)",
+          "active": "#3b82f6"
+        },
+        "text": {
+          "primary": "#fafafa",
+          "secondary": "#a1a1aa",
+          "tertiary": "#71717a"
+        }
+      }
+    },
+    "visual_enhancers": {
+      "glassmorphism": {
+        "heavy": "backdrop-blur-xl bg-black/40 border-b border-white/5",
+        "light": "backdrop-blur-md bg-white/5 border border-white/10"
+      },
+      "shadows": {
+        "glow": "0 0 20px rgba(59, 130, 246, 0.15)",
+        "card": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
+      },
+      "animations": {
+        "hover_lift": "transition-transform duration-200 ease-out hover:-translate-y-0.5",
+        "fade_in": "animate-in fade-in duration-300",
+        "slide_up": "animate-in slide-in-from-bottom-4 duration-500"
+      }
+    },
+    "component_styles": {
+      "Header": {
+        "classes": "sticky top-0 z-50 w-full backdrop-blur-xl bg-bolt-elements-bg-depth-1/80 border-b border-bolt-elements-borderColor h-[var(--header-height)]"
+      },
+      "Sidebar": {
+        "classes": "flex flex-col h-full border-r border-bolt-elements-borderColor bg-bolt-elements-bg-depth-2/50 backdrop-blur-xl"
+      },
+      "Chat": {
+        "container": "flex-1 overflow-hidden relative",
+        "message_user": "bg-bolt-elements-bg-depth-3/50 backdrop-blur-sm border border-white/5 rounded-2xl px-6 py-4",
+        "message_ai": "bg-transparent px-6 py-4"
+      },
+      "Editor": {
+        "container": "h-full w-full bg-bolt-elements-bg-depth-1 border-l border-bolt-elements-borderColor",
+        "tabs": "flex items-center bg-bolt-elements-bg-depth-2 border-b border-bolt-elements-borderColor"
+      },
+      "Button": {
+        "primary": "rounded-lg px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white hover:opacity-90 transition-all shadow-lg shadow-blue-500/20 font-medium",
+        "secondary": "rounded-lg px-4 py-2 bg-white/5 hover:bg-white/10 text-bolt-elements-textPrimary border border-white/10 transition-colors",
+        "ghost": "rounded-lg px-4 py-2 hover:bg-white/5 text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary transition-colors"
+      }
+    }
+  },
+  "implementation_plan": {
+    "step_1_uno_config": {
+      "file": "/app/uno.config.ts",
+      "action": "Update BASE_COLORS with the new Zinc (Gray) and Blue/Violet (Accent) palettes. Add glassmorphism shortcuts.",
+      "code_snippet_hint": "Replace BASE_COLORS with the new palette defined in colors.palette. Add shortcuts: 'glass': 'backdrop-blur-xl bg-white/5 border border-white/10'."
+    },
+    "step_2_css_variables": {
+      "file": "/app/app/styles/variables.scss",
+      "action": "Update :root[data-theme='dark'] variables to match the new 'tokens'.",
+      "details": {
+        "--bolt-elements-bg-depth-1": "theme('colors.gray.950')",
+        "--bolt-elements-bg-depth-2": "theme('colors.gray.900')",
+        "--bolt-elements-bg-depth-3": "theme('colors.gray.800')",
+        "--bolt-elements-borderColor": "rgba(255, 255, 255, 0.08)",
+        "--bolt-elements-sidebar-buttonBackgroundDefault": "transparent",
+        "--bolt-elements-sidebar-buttonBackgroundHover": "theme('colors.alpha.white.5')"
+      }
+    },
+    "step_3_global_styles": {
+      "file": "/app/app/styles/index.scss",
+      "action": "Ensure the scrollbar matches the dark theme (thin, zinc-800 thumb)."
+    },
+    "step_4_components": {
+      "action": "Refactor Header, Chat, and Sidebar components to use the new 'glass' and 'depth' classes.",
+      "files": [
+        "/app/app/components/header/Header.tsx",
+        "/app/app/components/sidebar/Menu.client.tsx",
+        "/app/app/components/chat/BaseChat.tsx"
+      ]
+    }
+  },
+  "universal_guidelines": {
+    "do": [
+      "Use 'Zinc' (Gray) scale for neutrals to achieve that premium 'Bolt/Vercel' look.",
+      "Use subtle borders (opacity 5-10%) instead of heavy shadows for separation.",
+      "Use backdrop-blur for overlays and sticky headers.",
+      "Ensure text contrast meets WCAG AA (Text Secondary should be Zinc-400, not darker).",
+      "Add micro-interactions (scale-95 on click, fade-in on load)."
+    ],
+    "dont": [
+      "DO NOT use pure black (#000000) for backgrounds. Use #09090b.",
+      "DO NOT use gradients for text unless it's a very large heading.",
+      "DO NOT make the UI too dense; give padding to the chat bubbles."
+    ]
+  },
+  "files_context": {
+    "styles_root": "/app/app/styles",
+    "components_root": "/app/app/components",
+    "config": "/app/uno.config.ts"
+  }
+}
